@@ -33,5 +33,6 @@
 
 <작업자가 설치하거나 업그레이드한 것. 없으면 이 절을 생략.>
 
+<작성 규칙이 서명 줄을 빼라고 하지 않으면:>
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
