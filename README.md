@@ -61,7 +61,8 @@ skills/orchestrate-issues/
   ui-polish.md           관리자가 직접 하는 UI 다듬기
   setup.md               프로젝트 설정 만들기
   task-template.md, review-template.md, pr-template.md
-  scripts/desktop_lock.py  실창 검사 차례 잠금(~/.agent-orchestra/desktop.lock)
+  scripts/desktop_lock.py  실창 검사 차례 잠금(~/.agent-orchestra/desktop.lock), install로 고정 경로 ~/.agent-orchestra/bin/에 복사
+  scripts/check_tiers.py   등급별 배치 표기의 모델·강도를 도구 목록과 대조
 ```
 
 ## 바꾸기

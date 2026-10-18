@@ -6,6 +6,9 @@
     python desktop_lock.py acquire --owner issue-49
     python desktop_lock.py release --owner issue-49
     python desktop_lock.py status
+    python desktop_lock.py install
+        이 스크립트를 버전과 관계없는 ~/.agent-orchestra/bin/desktop_lock.py에 복사한다(같으면 그대로 둔다).
+        저장소 문서·프로젝트 설정에는 그 고정 경로를 적는다.
 
 잠금은 ~/.agent-orchestra/desktop.lock 하나다(데스크톱은 컴퓨터에 하나이므로 프로젝트와 플러그인 버전에 관계없이 같은 파일). 다른 작업자가 잡고 있으면 풀릴 때까지 기다린다.
 잡은 지 STALE_SECONDS가 지난 잠금은 멈춘 작업자의 것으로 보고 넘겨받는다.
@@ -20,6 +23,7 @@ import time
 from pathlib import Path
 
 LOCK = Path.home() / '.agent-orchestra' / 'desktop.lock'
+INSTALLED = Path.home() / '.agent-orchestra' / 'bin' / 'desktop_lock.py'
 STALE_SECONDS = 15 * 60
 POLL_SECONDS = 5
 
@@ -65,6 +69,22 @@ def release(owner):
         print(f'데스크톱 잠금 해제: {owner}', flush=True)
 
 
+def install():
+    source = Path(__file__).resolve()
+    if source == INSTALLED.resolve():
+        print(f'이미 고정 경로에서 실행 중: {INSTALLED}', flush=True)
+        return
+    content = source.read_bytes()
+    if INSTALLED.exists() and INSTALLED.read_bytes() == content:
+        print(f'고정 경로가 최신입니다: {INSTALLED}', flush=True)
+        return
+    INSTALLED.parent.mkdir(parents=True, exist_ok=True)
+    temporary = INSTALLED.with_suffix('.tmp')
+    temporary.write_bytes(content)
+    os.replace(temporary, INSTALLED)
+    print(f'고정 경로에 복사했습니다: {INSTALLED}', flush=True)
+
+
 def main():
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding='utf-8', errors='replace')
@@ -72,9 +92,12 @@ def main():
     command = argv[argv.index('--') + 1:] if '--' in argv else []
     argv = argv[:argv.index('--')] if '--' in argv else argv
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('run', 'acquire', 'release', 'status'))
+    parser.add_argument('action', choices=('run', 'acquire', 'release', 'status', 'install'))
     parser.add_argument('--owner')
     args = parser.parse_args(argv)
+    if args.action == 'install':
+        install()
+        return
     if args.action == 'status':
         holder = read()
         print(json.dumps(holder, ensure_ascii=False) if holder else '비어 있음')
