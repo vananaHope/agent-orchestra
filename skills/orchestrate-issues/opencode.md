@@ -13,7 +13,7 @@ OpenCode Go는 빠른 일을 맡는다. 모델은 `~/.config/opencode/opencode.j
 
 `worker-start ... --agent opencode`로 맡긴다.
 
-- 검증은 관리자가 직접 한다: diff를 읽고 관련 테스트만 돌린 뒤 `.local/orchestration/issue-<n>/minor-check-<k>.md`에 결과를 남긴다. 의심스러우면 Claude 검토자를 띄운다.
+- 검증은 관리자가 직접 한다: diff를 읽고 관련 테스트만 돌린 뒤 `.local/orchestration/<작업 이름>/minor-check-<k>.md`에 결과를 남긴다. 의심스러우면 Claude 검토자를 띄운다.
 - 같은 작업이 두 번 반려되면 Codex로 넘긴다.
 
 ## 빠른 답변·빠른 판단

@@ -26,6 +26,6 @@
   - 수정 diff를 읽고, 지적마다 고쳐졌는지 판정한다.
   - 관련 테스트만 돌린다.
   - 의심스러우면 그때만 재검토를 맡긴다.
-  - 확인 결과를 `.local/orchestration/issue-<n>/minor-check-<k>.md`에 짧게 남긴다.
+  - 확인 결과를 `.local/orchestration/<작업 이름>/minor-check-<k>.md`에 짧게 남긴다.
 
 **완료 기준**: 마지막 재검토 결론이 "통과"이거나, 사소 수정의 관리자 확인 기록이 남았다.

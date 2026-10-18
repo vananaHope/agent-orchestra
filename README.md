@@ -25,14 +25,21 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 ## 프로젝트에서 쓰기
 
-이슈 구현이나 다음 묶음 진행을 요청하면 `agent-orchestra:orchestrate-issues` 스킬이 불린다. 한도만 궁금하면 `agent-orchestra:check-limits`가 불린다. 스킬은 프로젝트마다 다음 두 파일을 읽는다.
-
-| 파일 | 내용 |
+| 스킬 | 불리는 때 |
 | --- | --- |
-| `docs/agents/orchestration.md` | 맡길 이슈를 고르는 방식(라벨·마일스톤·선행 관계·완료 기준), 스펙 위치, 구현 제약, 환경 준비·테스트 명령, UI 범위, 추가 완료 조건, 실창 검사 등 |
-| `docs/agents/common-findings.md` | 그 프로젝트의 교차 검토에서 반복된 지적 목록 |
+| `agent-orchestra:orchestrate-issues` | 이슈 구현, 다음 이슈·다음 묶음 진행을 요청할 때 |
+| `agent-orchestra:check-limits` | Codex·Claude 한도를 물을 때(지휘 중에도 쓰임) |
+| `/agent-orchestra:configure` | 직접 칠 때만. 프로젝트 설정을 설정 창으로 만들거나 고침 |
 
-특정 이슈 관례(예: `ready-for-agent` 라벨)를 전제하지 않는다. "이슈 고르기" 절이 없을 때만 `ready-for-agent` 라벨, GitHub 이슈 의존 관계, 본문 체크리스트를 기본값으로 쓴다. 처음 쓰는 프로젝트에서는 두 파일이 없으므로 스킬이 저장소를 훑고 몇 가지를 물어 만든다(`skills/orchestrate-issues/setup.md`). 작업 파일은 각 저장소의 `.local/orchestration/`에 쌓인다.
+처음 쓰는 프로젝트에서는 지휘를 시작할 때 설정 창이 뜬다. 저장소를 훑어 찾은 값이 추천 선택지로 들어 있어서 대부분 고르기만 하면 된다.
+
+프로젝트마다 고를 수 있는 것:
+
+- **이슈 저장소**: GitHub 이슈, 로컬 md(형식은 프로젝트마다 지정), 아티팩트(데이터베이스로 상태까지 기록)
+- **병합**: 관리자가 병합하거나, PR까지만 만들고 사람이 병합(회사 저장소). 기본 브랜치도 지정
+- **설정 위치**: 저장소에 커밋(`docs/agents/orchestration.md`)하거나, 로컬에만(`.local/orchestration/settings.md`, `.git/info/exclude`로 제외)
+
+설정이 없던 기존 프로젝트는 GitHub 이슈의 `ready-for-agent` 라벨, GitHub 이슈 의존 관계, 본문 체크리스트, 관리자 병합을 기본값으로 쓴다. 작업 파일은 각 저장소의 `.local/orchestration/`에 쌓인다.
 
 ## 구성
 
@@ -41,8 +48,10 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 skills/check-limits/     Codex·Claude 실제 사용률 측정(따로 불러도 됨)
   SKILL.md
   scripts/codex_limit.py, claude_limit.py
+skills/configure/        설정 창으로 프로젝트 설정 만들기·고치기(사용자만 부름)
 skills/orchestrate-issues/
   SKILL.md               역할, 배치, 시작 조건, 1~7단계
+  trackers.md            이슈 저장소별 동작(GitHub, 로컬 md, 아티팩트)
   limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드)
   opencode.md            OpenCode Go에 맡기는 일
   fixes.md               수정 작업자와 재검토
