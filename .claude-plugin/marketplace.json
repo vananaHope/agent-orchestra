@@ -1,6 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agent-orchestra",
+  "description": "개인 Claude Code 플러그인 모음(이슈 지휘)",
   "owner": {
     "name": "vananaHope"
   },
