@@ -1,76 +1,53 @@
 # OpenCode Go
 
-OpenCode Go는 빠르고 범위가 분명한 일을 맡는다. 모델은 `~/.config/opencode/opencode.json`의 기본 모델이다. 아래 기준에 드는 일은 Codex·Claude보다 OpenCode Go에 먼저 맡긴다. 결과는 언제나 다른 에이전트가 검증한다(Claude 절약 모드에서는 Codex).
+OpenCode Go는 빠르고 범위가 분명한 일을 맡는다. 어느 일에 쓰는지는 [tiers.md](tiers.md)의 등급별 목록이 정하고, 이 파일은 OpenCode에만 붙는 조건과 방법을 적는다. 결과는 언제나 다른 에이전트가 검증한다(Claude 절약 모드에서는 Codex).
 
-## 공통 제외
+## 맡기지 않는 일
 
-다음 중 하나라도 해당하면 OpenCode Go에 맡기지 않는다.
+다음 중 하나라도 해당하면 등급 목록에 있어도 OpenCode를 건너뛴다.
 
 - UI 작업이다(프로젝트 설정의 "UI 작업").
 - 프로젝트 설정의 "간단한 구현에서 뺄 영역"을 건드린다.
 - 실창 검사가 필요하다.
 - 설계를 새로 정해야 한다(새 도메인 개념, 공용 인터페이스, 여러 방안 중 고르기).
+- 무엇을 어디에 할지 명세에 구체적으로 적을 수 없다.
 
 명세에 경고·금지 문구가 많다는 것만으로는 설계가 필요한 일로 보지 않는다.
 
-## 간단한 구현
+**크기 상한**: `standard`는 프로젝트 설정 "등급별 배치"의 크기 상한까지만 맡긴다(없으면 파일 4개 안, 변경 200줄 안팎. 테스트 포함). 이슈 본문과 관련 파일로 미리 가늠한다.
 
-다음을 모두 만족하는 작업이다.
+## 모델과 강도
 
-- 공통 제외에 들지 않는다.
-- 파일 4개 안, 변경 200줄 안팎에서 끝난다(테스트 포함). 이슈 본문과 관련 파일로 미리 가늠한다.
-- 무엇을 어디에 할지 명세에 구체적으로 적을 수 있다.
+Orca는 OpenCode 작업자에게 `--model`을 받지 않는다. 대신 OpenCode가 worktree 루트의 `opencode.json`을 읽으므로, 거기에 기본 에이전트(`build`)의 모델과 강도(`variant`)를 적는다.
 
-테스트만 더하거나 고치는 작업, 스크립트·문서만 바꾸는 작업이 대표적이다.
+1. worktree가 아직 없으면 먼저 만든다: `orca worktree create --name <작업 이름>-<slug> --repo path:<메인 저장소> --base-branch main --setup run --json`. 저장소에 이미 커밋된 `opencode.json`이 있으면 이 방법을 쓰지 않고 기본값으로 띄운 뒤 사용자에게 알린다.
+2. worktree 루트에 쓴다. `model`은 `opencode models`가 보여 주는 `provider/model` 이름이고, 모델을 정하지 않았으면 `~/.config/opencode/opencode.json`의 기본 모델을 적는다.
 
-`worker-start ... --agent opencode`로 맡긴다.
+   ```json
+   { "agent": { "build": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "high" } } }
+   ```
+3. 이 파일이 커밋되지 않게 메인 저장소의 `.git/info/exclude`에 `/opencode.json`을 더한다(worktree가 함께 쓰는 파일이라 한 번이면 된다).
+4. worktree에서 `opencode debug agents`를 돌려 `build`의 `model`에 정한 모델과 `variant`가 보이는지 확인한다.
+5. `worker-start --spec ... --worktree "id:<worktree id>" --agent opencode`로 띄운다.
 
-- 검증은 관리자가 직접 한다: diff를 읽고 관련 테스트만 돌린 뒤 `.local/orchestration/<작업 이름>/minor-check-<k>.md`에 결과를 남긴다.
-- 실제 변경이 파일 3개 이상이거나 100줄을 넘으면, 또는 의심스러우면 관리자 확인 대신 Claude 검토자를 띄운다([review-template.md](review-template.md)).
-- 같은 작업이 두 번 반려되면 Codex로 넘긴다.
+같은 worktree에서 다음 OpenCode 작업자의 강도가 다르면 파일을 고치고 4번을 다시 한다. 실제로 쓰인 값은 `~/.local/share/opencode/opencode.db`의 `session_v2.model`에서 확인할 수 있다.
 
-## 지적 수정
+`opencode run`(아래 빠른 답변)은 이 설정을 따르지 않는다. 거기서는 `-m provider/model#variant`로 준다.
 
-[fixes.md](fixes.md)의 수정 작업자 자리다. 코어 이슈의 수정이 다음을 모두 만족하면 Codex `medium` 대신 OpenCode Go에 맡긴다.
+## 검증
 
-- 공통 제외에 들지 않는다.
-- 차단 지적이 없다.
-- 고칠 지적마다 위치와 고칠 방향이 검토 보고서나 수정 명세에 구체적으로 있다.
+- `light`: 관리자가 diff를 읽고 관련 테스트만 돌린 뒤 `.local/orchestration/<작업 이름>/minor-check-<k>.md`에 결과를 남긴다. 실제 변경이 파일 3개 이상이거나 100줄을 넘으면, 또는 의심스러우면 Claude 검토자를 띄운다([review-template.md](review-template.md)).
+- `standard`: Claude 검토자가 검토한다([review-template.md](review-template.md)).
+- 지적 수정은 [fixes.md](fixes.md)의 재검토 규칙을 따른다.
 
-같은 worktree에 새 작업자를 띄운다: `worker-start --spec ... --worktree "id:..." --agent opencode`.
+## rebase
 
-- 재검토는 [fixes.md](fixes.md) 규칙 그대로다. 중요 지적을 고쳤으면 같은 검토자가 재검토한다.
-- 같은 수정이 두 번 반려되면 Codex `medium`(대체 모드에서는 Claude)으로 넘긴다.
+SKILL.md 6단계 2의 rebase는 `light`다.
 
-## 기계적 작업
-
-판단이 거의 필요 없는 일이다.
-
-- **rebase**: SKILL.md 6단계 2의 "`main` 위로 rebase하고 관련 테스트 다시 돌리기"를 같은 worktree의 새 OpenCode 작업자에게 맡긴다.
-  - 명세에 rebase 전 `HEAD`를 적어 둔다.
-  - import, 목록 순서, 붙어 있는 줄처럼 양쪽 의도를 모두 살리기 쉬운 충돌은 OpenCode가 해결한다.
-  - 같은 함수의 동작이 양쪽에서 바뀐 충돌이면 `git rebase --abort`로 되돌리고 보고하게 한다. 관리자는 그 rebase를 원래 구현 작업자에게 맡긴다.
-  - 검증: 관리자가 `git range-diff <rebase 전 HEAD>...HEAD`로 충돌 해결분 말고는 변경이 같은지 보고, 관련 테스트 통과를 확인한다.
-- **앞부분 작업**: SKILL.md 1단계의 앞부분 가운데 간단한 구현 기준에 드는 것(테스트·스크립트만 바꾸는 것 등)은 OpenCode Go에 맡긴다.
-
-## 맡김 기록
-
-OpenCode Go에 맡긴 일이 얼마나 반려되는지 보고 기준을 넓히거나 좁히려는 기록이다. 메인 저장소의 `.local/orchestration/opencode-log.md`에 맡길 때 한 줄을 더하고, 결과가 나오면 그 줄을 채운다. 파일이 없으면 머리글부터 만든다.
-
-```
-| 날짜 | 작업 이름 | 종류 | 등급 | 반려 | 결과 |
-| --- | --- | --- | --- | --- | --- |
-| 2026-10-18 | issue-180 | 간단한 구현 | standard | 1 | 통과 |
-```
-
-- **종류**: 간단한 구현, 지적 수정, rebase, 앞부분
-- **등급**: 실제 diff로 정한다.
-  - `light`: 파일 1~2개 안의 간단한 구현, 지적 수정, rebase, 테스트·스크립트·문서만 바꾼 일
-  - `standard`: 그 밖의 간단한 구현(파일 3개 이상이거나 100줄 넘음)
-- **반려**: 관리자 확인이나 검토에서 다시 고치라고 돌려보낸 횟수
-- **결과**: `통과`, `Codex로 넘김`, `Claude로 넘김`, `원래 구현자로 넘김`(rebase 충돌)
-
-`standard` 줄이 10개 쌓일 때마다 등급별 반려율과 넘김 수를 사용자에게 보고하고 기준 조정을 제안한다. 넘김이 잦으면 크기 상한을 줄이고, 반려가 드물면 넓히자고 한다.
+- 명세에 rebase 전 `HEAD`를 적어 둔다.
+- import, 목록 순서, 붙어 있는 줄처럼 양쪽 의도를 모두 살리기 쉬운 충돌은 OpenCode가 해결한다.
+- 같은 함수의 동작이 양쪽에서 바뀐 충돌이면 `git rebase --abort`로 되돌리고 보고하게 한다. 관리자는 그 rebase를 원래 구현 작업자에게 맡긴다.
+- 검증: 관리자가 `git range-diff <rebase 전 HEAD>...HEAD`로 충돌 해결분 말고는 변경이 같은지 보고, 관련 테스트 통과를 확인한다.
 
 ## 빠른 답변·빠른 판단
 

@@ -27,8 +27,14 @@
    - `자동`이면 병합 방법(`merge`/`squash`/`rebase`)을 다음 창에 더한다. 저장소 설정(`gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed`)에서 허용된 것만 낸다.
 2. **이슈**: 종류에 맞춰 맡길 이슈 표시(찾은 라벨·마일스톤·상태 값), 선행 관계, 완료 기준 위치. 로컬 md면 이슈 파일 위치와 상태 표시를, 아티팩트면 URL을 묻는다(URL은 "Other"로 받는다).
 3. **작업 나누기**: UI 작업 범위(찾은 프런트엔드 폴더, 여러 개 고름), 간단한 구현에서 뺄 영역(여러 개 고름), 실창 검사가 필요한 앱인지.
-4. **명령**: 환경 준비 명령, 관련 테스트 명령, 추가 완료 조건. 찾은 명령(`package.json` scripts, `Makefile`, 설정 스크립트)을 선택지로 낸다.
-5. **작성 규칙**: 메시지 언어(최근 커밋 메시지·PR에서 찾은 언어를 추천), PR 서명 줄("🤖 Generated with Claude Code")을 넣을지. `AGENTS.md`에 이미 정해져 있으면 이 창은 건너뛴다.
+4. **등급별 배치**([tiers.md](tiers.md)): 질문 4개. `light`·`standard`·`hard` 구현 목록을 하나씩 묻고, 마지막으로 OpenCode `standard` 크기 상한을 묻는다. `max`는 관리자 몫이라 묻지 않는다.
+   - 선택지는 목록 묶음이다. 첫 선택지는 [tiers.md](tiers.md)의 기본 배치에 "(추천)"을 붙인다. 나머지는 강도를 한 단계 올리거나 내린 묶음, OpenCode를 뺀 묶음으로 채운다. 예: `light`면 "opencode → codex@medium (추천)", "codex@medium", "codex@low".
+   - 설명에 지금 기본 모델을 적는다: Codex는 `~/.codex/config.toml`의 `model`·`model_reasoning_effort`, OpenCode는 `~/.config/opencode/opencode.json`의 `model`.
+   - 크기 상한 선택지: "파일 4개·변경 200줄 안팎 (추천)", "파일 2개·변경 100줄 안팎", "상한 없음".
+   - `opencode` 명령이 없으면 OpenCode가 든 선택지를 빼고, 크기 상한 질문도 뺀다.
+   - 다른 모델이나 강도는 "Other"로 `에이전트[:모델][@강도]` 표기를 받는다.
+5. **명령**: 환경 준비 명령, 관련 테스트 명령, 추가 완료 조건. 찾은 명령(`package.json` scripts, `Makefile`, 설정 스크립트)을 선택지로 낸다.
+6. **작성 규칙**: 메시지 언어(최근 커밋 메시지·PR에서 찾은 언어를 추천), PR 서명 줄("🤖 Generated with Claude Code")을 넣을지. `AGENTS.md`에 이미 정해져 있으면 이 창은 건너뛴다.
 
 아티팩트는 URL을 받은 뒤 `Artifact` `read`와 `ArtifactData` `list`로 컬렉션·필드를 보고(권한 확인은 [trackers.md](trackers.md) "아티팩트"), 필드 대응과 상태 값을 한 창 더 띄워 확인한다. 데이터베이스가 없거나 편집 권한이 없으면 그 사실을 알리고 읽기 전용으로 할지 같은 창에서 묻는다. 로컬 md도 파일 몇 개를 열어 본 뒤 같은 식으로 확인하고, 파일이 Git에서 제외됐는지 `git check-ignore`로 본다([trackers.md](trackers.md) "로컬 md").
 
@@ -90,7 +96,17 @@
 
 ## 간단한 구현에서 뺄 영역
 
-<OpenCode Go에 맡기지 않을 위험한 영역: 공용 계약, DB 버전, 플랫폼별 코드 등>
+<OpenCode Go에 맡기지 않을 위험한 영역: 공용 계약, DB 버전, 플랫폼별 코드 등. 이 영역을 건드리는 일은 `hard`다.>
+
+## 등급별 배치
+
+| 등급 | 구현 목록(앞부터) |
+| --- | --- |
+| `light` | <예: opencode → codex@medium> |
+| `standard` | <예: opencode@high → codex@medium> |
+| `hard` | <예: codex@high → claude@high> |
+
+- OpenCode `standard` 크기 상한: <파일 4개·변경 200줄 안팎 / 파일 2개·변경 100줄 안팎 / 없음>
 
 ## 추가 완료 조건
 

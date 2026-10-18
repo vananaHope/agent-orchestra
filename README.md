@@ -2,8 +2,8 @@
 
 Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해 GitHub 이슈를 처리한다.
 
-- 기본 배치: Codex가 구현하고, Claude가 교차 검토한다. UI 작업은 반대로 Claude가 구현하고 Codex가 검토한다.
-- OpenCode Go가 간단한 구현, 범위가 분명한 지적 수정, rebase 같은 기계적 작업, 빠른 판단을 맡는다.
+- 등급별 배치: 일마다 등급(light/standard/hard/max)을 정하고, 등급별 작업자 목록(OpenCode·Codex·Claude, 모델·추론 강도 포함)에서 고른다. 목록은 설정 창에서 정한다. 구현자와 다른 계열이 교차 검토하고, UI 작업은 Claude가 구현하고 Codex가 검토한다.
+- OpenCode Go가 light·standard의 앞자리(범위가 분명한 구현·지적 수정·rebase)와 빠른 판단을 맡는다.
 - Codex·Claude의 실제 사용률을 재서 한도가 차면 배치를 바꾼다(대체 모드, Claude 절약 모드).
 - 이슈 의존 관계에서 임계 경로 순서로 고르고, 교차 검토를 통과하면 병합하고 worktree를 정리한다.
 
@@ -54,7 +54,8 @@ skills/orchestrate-issues/
   SKILL.md               역할, 배치, 시작 조건, 1~7단계
   trackers.md            이슈 저장소별 동작(GitHub, 로컬 md, 아티팩트)
   limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드)
-  opencode.md            OpenCode Go에 맡기는 일
+  tiers.md               등급 기준, 등급별 작업자 목록, 맡김 기록
+  opencode.md            OpenCode Go 조건, 모델·강도 주기, rebase
   fixes.md               수정 작업자와 재검토
   desktop.md             실창 검사 잠금
   ui-polish.md           관리자가 직접 하는 UI 다듬기

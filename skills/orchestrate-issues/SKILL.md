@@ -1,6 +1,6 @@
 ---
 name: orchestrate-issues
-description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex 구현 → Claude 교차 검토 → PR·병합"(UI 작업은 Claude 구현 → Codex 검토) 흐름으로 지휘한다. 이슈 구현·다음 이슈 진행·다음 묶음(wave) 진행, 지시 대기 작업의 PR 올리기·병합·리뷰 반영을 요청받았을 때 사용.
+description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급별 작업자(OpenCode·Codex·Claude) 구현 → 다른 계열 교차 검토 → PR·병합" 흐름으로 지휘한다. 이슈 구현·다음 이슈 진행·다음 묶음(wave) 진행, 지시 대기 작업의 PR 올리기·병합·리뷰 반영을 요청받았을 때 사용.
 ---
 
 # 이슈 지휘
@@ -26,22 +26,23 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
 
 ## 배치
 
+맡기는 일마다 먼저 등급(`light`/`standard`/`hard`/`max`)을 정하고, 그 등급의 에이전트 목록에서 작업자를 고른다. 등급 기준, 기본 목록, 고르는 규칙, 모델·강도를 주는 방법은 [tiers.md](tiers.md)에 있고, 이 프로젝트의 목록은 프로젝트 설정의 "등급별 배치" 절이다.
+
 | 작업 | 구현 | 교차 검토 |
 | --- | --- | --- |
-| 코어 | Codex(`--agent codex`) | Claude(`--agent claude`) |
+| 코어 | 등급 목록([tiers.md](tiers.md)) | 구현자와 다른 계열 |
 | UI(프로젝트 설정의 "UI 작업") | Claude | Codex |
-| 간단한 구현([opencode.md](opencode.md)) | OpenCode Go | 관리자가 직접 확인(큰 변경은 Claude) |
 | UI 다듬기([ui-polish.md](ui-polish.md)) | 관리자 | Codex |
 
-- 구현한 쪽과 다른 에이전트가 검토하는 것이 교차 검토다. 수정 작업자는 구현자와 같은 계열이다. 다만 범위가 분명한 코어 수정, rebase 같은 기계적 작업은 OpenCode Go가 먼저 맡는다([opencode.md](opencode.md)).
-- 한 이슈에 코어와 UI가 섞여 있으면 UI 쪽을 Claude가 맡는다. 코어만 먼저 떼어 Codex에게 맡길 수 있으면 나눠도 된다.
-- 한도가 `ok`가 아니면 이 배치는 [limits.md](limits.md)의 모드로 바뀐다.
+- 구현한 쪽과 다른 에이전트가 검토하는 것이 교차 검토다.
+- 한 이슈에 코어와 UI가 섞여 있으면 UI 쪽을 Claude가 맡는다. 코어만 먼저 떼어 등급 목록으로 맡길 수 있으면 나눠도 된다.
+- 한도가 `ok`가 아닌 에이전트는 목록에서 건너뛴다. 관리자와 검토자 쪽 변화는 [limits.md](limits.md)에 있다.
 - 넓게 훑어야 하는 짧은 질문은 OpenCode `plan` 에이전트에 먼저 묻는다([opencode.md](opencode.md)).
 
 ## 고정 규칙
 
 - **새 작업 시작 조건**: 동시 구현 작업자 수에는 고정 상한이 없다. 검토자는 이 수에 넣지 않는다. 새 작업은 다음을 **모두** 만족할 때만 시작한다.
-  - 새 작업을 맡을 에이전트의 한도가 `ok`다. Claude 검토가 뒤따르는 Codex 구현이면 Claude도 `ok`여야 한다.
+  - 등급 목록에서 고른 에이전트와, 그 작업을 검토할 계열의 한도가 `ok`다.
   - 검토를 기다리는 작업(구현은 끝났는데 검토자가 아직 붙지 않은 것)이 1개 이하다.
   - 실창 잠금 대기가 길게 이어지고 있지 않다.
   - 새 작업이 진행 중인 작업과 같은 파일 영역을 건드리지 않는다.
@@ -56,7 +57,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
 - **작성 규칙**(메시지 언어, PR 서명 줄)은 프로젝트 설정의 "작성 규칙" 절, 없으면 `AGENTS.md`의 작성 규칙을 따른다. 둘 다 없으면 한국어이고 서명 줄을 넣는다. 작업 명세, 커밋, PR, 이슈 댓글 모두.
 - **작업 파일**(명세, 검토 보고서)은 메인 저장소의 `.local/orchestration/<작업 이름>/`에 둔다(작업 이름은 [trackers.md](trackers.md)). Git에서 제외되는 위치다.
 - **작업 상태**는 같은 폴더의 `state.md` 첫 줄에 적는다: `구현 중` → `검토 중` → `수정 중` → `지시 대기` → `PR 열림` → `끝`(자동 병합이면 `지시 대기`·`PR 열림`을 건너뛴다). 단계가 바뀔 때마다 고친다. 세션이 바뀌어도 이 파일로 진행 중인 작업을 안다.
-- **OpenCode 맡김 기록**: OpenCode Go에 맡긴 일은 맡길 때와 결과가 나올 때 [opencode.md](opencode.md)의 "맡김 기록"에 남긴다.
+- **맡김 기록**: 작업자에게 맡긴 일(구현, 앞부분, 지적 수정, rebase)은 맡길 때와 결과가 나올 때 [tiers.md](tiers.md)의 "맡김 기록"에 남긴다.
 - **확인 자료**: 사람이나 검토자가 실제 동작을 재현할 때 쓸 자료는 프로젝트 설정의 "확인 자료" 절에 있다.
 
 ## 단계
@@ -75,7 +76,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
 - 명세에 "건드리지 말 파일·영역"과 "선행 이슈 병합 뒤로 미루는 범위"를 구체적으로 적는다.
 - 해당 이슈에 앞부분과 마무리로 나눈다는 댓글을 남긴다.
 - 앞부분은 같은 작업 이름의 브랜치로 먼저 병합해도 되고, 마무리까지 한 브랜치에서 이어 가도 된다. 이슈는 마무리까지 끝났을 때 닫는다.
-- 앞부분이 [opencode.md](opencode.md)의 간단한 구현 기준에 들면 OpenCode Go에 맡긴다.
+- 앞부분도 따로 등급을 정해 그 목록으로 맡긴다([tiers.md](tiers.md)).
 - 앞부분으로 떼어 낼 만한 부분이 작거나 선행 이슈와 겹치면 나누지 않는다.
 
 **완료 기준**: 고른 이슈·앞부분 목록을 사용자에게 한 줄로 알렸다. 시작 조건이 남는데 맡기지 않았다면 그 이유도 한 줄로 알렸다(예: "앞부분으로 나눌 수 있는 이슈 없음", "검토 대기 2개").
@@ -88,7 +89,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
    - 작업자가 이슈를 직접 읽을 수 없는 저장소면 이슈 본문을 명세에 옮긴다. 완료 기준이 없으면 뽑아 적는다([trackers.md](trackers.md) 공통).
    - 맡기기 직전에 `state.md`를 `구현 중`으로 쓰고, 이슈를 진행 중으로 표시한다(저장소가 지원하면).
 2. Run이 없으면 만든다(이번 지휘 세션 전체에 Run 하나).
-3. `worker-start --spec "<명세>" --worktree new-top-level --name <작업 이름>-<slug> --base-branch main --agent <배치의 구현 에이전트>`로 시작한다.
+3. 등급을 정하고 목록에서 작업자를 고른 뒤([tiers.md](tiers.md)), `state.md` 둘째 줄에 `등급: <등급> · 작업자: <표기>`를 적고 맡김 기록에 한 줄을 더한다. 그다음 `worker-start --spec "<명세>" --worktree new-top-level --name <작업 이름>-<slug> --base-branch main --agent <에이전트>`로 시작한다. 모델·강도를 줄 때는 [tiers.md](tiers.md)의 "띄우기"를 따른다(OpenCode는 worktree를 먼저 만든다).
 4. **입력이 실제로 제출됐는지 확인한다.** `orca orchestration worker-read --dispatch <id> --source terminal --json`으로 작업자 화면을 읽는다. `draft`에 `[Pasted Content ...]`나 명세 일부가 남아 있으면 붙여넣기만 되고 제출되지 않은 것이다. 이때는 같은 명세를 다시 보내지 말고 `orca terminal send --terminal <handle> --enter`로 Enter만 보낸다.
    - 특히 기존 터미널을 재사용할 때(`--terminal`) 잘 생긴다.
    - `orca terminal read`의 결과에는 draft가 나오지 않으니 이 확인에 쓰지 않는다.
@@ -111,7 +112,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
 
 ### 4. 교차 검토
 
-구현 작업자가 끝나면 `state.md`를 `검토 중`으로 바꾸고, 그 작업자를 `worker-retain`으로 남겨 둔다(수정 지시에 재사용). 그다음 [review-template.md](review-template.md)를 채워 배치의 검토 에이전트를 **같은 worktree**(`--worktree "id:<worktree id>"`)에 새로 띄운다.
+구현 작업자가 끝나면 `state.md`를 `검토 중`으로 바꾸고, 그 작업자를 `worker-retain`으로 남겨 둔다(수정 지시에 재사용). 그다음 [review-template.md](review-template.md)를 채워 구현자와 다른 계열의 검토 에이전트([tiers.md](tiers.md) "고르기" 3)를 **같은 worktree**(`--worktree "id:<worktree id>"`)에 새로 띄운다. OpenCode가 맡은 `light`는 검토자 대신 관리자가 확인한다([opencode.md](opencode.md) "검증").
 
 **완료 기준**: 검토 보고서 파일이 생겼고, 결론이 "통과" 또는 "수정 필요"다.
 
@@ -144,7 +145,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
 병합 방식이 `자동`이면 1부터 차례로 한다.
 
 1. 브랜치를 push하고 [pr-template.md](pr-template.md)로 PR을 만든다. GitHub 이슈면 본문에 `Closes #<n>`을 넣고, 다른 저장소면 이슈 위치를 적는다.
-2. `main`이 그사이 앞으로 갔으면, 같은 worktree에 새 OpenCode 작업자를 띄워 `main` 위로 rebase하고 관련 테스트를 다시 돌리라고 맡긴다. 충돌 해결도 그 작업자가 한다. 같은 동작이 양쪽에서 바뀐 충돌이라 OpenCode가 되돌리고 보고하면 원래 구현 작업자에게 맡긴다([opencode.md](opencode.md)의 "기계적 작업"). "main 변경" 안내는 **진행 중인 Dispatch가 구현 작업일 때만** 보낸다. 검토 중인 이슈는 그 검토가 끝난 뒤 다음 구현 지시에 rebase를 넣는다(검토자에게 rebase 안내를 보내지 않는다).
+2. `main`이 그사이 앞으로 갔으면, 같은 worktree에 `light` 목록의 작업자(기본은 OpenCode)를 새로 띄워 `main` 위로 rebase하고 관련 테스트를 다시 돌리라고 맡긴다. 충돌 해결도 그 작업자가 한다. 같은 동작이 양쪽에서 바뀐 충돌이라 되돌리고 보고하면 원래 구현 작업자에게 맡긴다([opencode.md](opencode.md)의 "rebase"). "main 변경" 안내는 **진행 중인 Dispatch가 구현 작업일 때만** 보낸다. 검토 중인 이슈는 그 검토가 끝난 뒤 다음 구현 지시에 rebase를 넣는다(검토자에게 rebase 안내를 보내지 않는다).
 3. `gh pr merge <PR> --<병합 방법> --subject "<제목> (<이슈 표시>)"`로 병합하고 원격 브랜치를 지운다. 병합 방법은 프로젝트 설정 "병합" 절(`merge`/`squash`/`rebase`, 없으면 `merge`)이다.
 4. 메인 저장소의 `main`을 pull하고, GitHub 이슈가 아니면 이슈를 닫는다([trackers.md](trackers.md)). `state.md`를 `끝`으로 바꾼다.
 5. 작업자들을 `worker-release`로 정리한다. 재사용한 터미널은 `retained`(`user_takeover` 등)로 남을 수 있다. `worker-list --run <run> --terminal-state reclaimable`이 0이면 정리가 끝난 것이다.
