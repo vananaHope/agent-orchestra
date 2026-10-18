@@ -11,12 +11,13 @@
 
 ## 수정 작업자
 
-수정을 맡기면 `state.md`를 `수정 중`으로 바꾼다. 수정 작업자는 구현자와 같은 계열이다(SKILL.md 배치). Codex 수정은 시간과 한도를 아끼려고 강도를 낮춘다.
+수정을 맡기면 `state.md`를 `수정 중`으로 바꾼다. 수정 작업자는 구현자와 같은 계열이다(SKILL.md 배치). 다만 조건이 맞는 코어 수정은 OpenCode Go가 맡는다. Codex 수정은 시간과 한도를 아끼려고 강도를 낮춘다.
 
-- 기본은 같은 worktree에 **새 Codex 작업자를 추론 강도 `medium`으로** 띄운다: `worker-start --spec ... --worktree "id:..." --agent codex --model <Codex 설정의 model> --effort medium`. `--model`/`--effort`는 `--terminal`과 함께 쓸 수 없으므로 기존 터미널을 재사용하지 않는다. 수정 명세가 고칠 곳을 구체적으로 짚으므로 구현 맥락이 없어도 된다.
+- **먼저** [opencode.md](opencode.md)의 "지적 수정" 조건을 본다. 맞으면 같은 worktree에 새 OpenCode 작업자(`--agent opencode`)를 띄운다.
+- 그 밖의 코어 수정은 같은 worktree에 **새 Codex 작업자를 추론 강도 `medium`으로** 띄운다: `worker-start --spec ... --worktree "id:..." --agent codex --model <Codex 설정의 model> --effort medium`. `--model`/`--effort`는 `--terminal`과 함께 쓸 수 없으므로 기존 터미널을 재사용하지 않는다. 수정 명세가 고칠 곳을 구체적으로 짚으므로 구현 맥락이 없어도 된다.
 - 예외: 차단 지적처럼 **설계를 다시 잡아야 하는 수정**은 남겨 둔 원래 터미널(`--terminal <handle>`)에 보낸다. 원래 강도를 그대로 쓴다.
 - 처음 구현은 Codex 설정의 기본 강도로 한다.
-- **Claude 수정**(UI 이슈, 대체 모드): 같은 worktree에 새 Claude 작업자(`--agent claude`)를 띄운다. 설계를 다시 잡아야 하는 수정만 남겨 둔 원래 Claude 터미널에 보낸다.
+- **Claude 수정**(UI 이슈, 대체 모드에서 OpenCode 조건에 들지 않는 수정): 같은 worktree에 새 Claude 작업자(`--agent claude`)를 띄운다. 설계를 다시 잡아야 하는 수정만 남겨 둔 원래 Claude 터미널에 보낸다.
 
 ## 재검토
 

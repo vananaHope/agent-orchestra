@@ -3,7 +3,7 @@
 Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해 GitHub 이슈를 처리한다.
 
 - 기본 배치: Codex가 구현하고, Claude가 교차 검토한다. UI 작업은 반대로 Claude가 구현하고 Codex가 검토한다.
-- OpenCode Go가 간단한 구현과 빠른 판단을 맡는다.
+- OpenCode Go가 간단한 구현, 범위가 분명한 지적 수정, rebase 같은 기계적 작업, 빠른 판단을 맡는다.
 - Codex·Claude의 실제 사용률을 재서 한도가 차면 배치를 바꾼다(대체 모드, Claude 절약 모드).
 - 이슈 의존 관계에서 임계 경로 순서로 고르고, 교차 검토를 통과하면 병합하고 worktree를 정리한다.
 

@@ -30,10 +30,10 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
 | --- | --- | --- |
 | 코어 | Codex(`--agent codex`) | Claude(`--agent claude`) |
 | UI(프로젝트 설정의 "UI 작업") | Claude | Codex |
-| 간단한 구현([opencode.md](opencode.md)) | OpenCode Go | 관리자가 직접 확인 |
+| 간단한 구현([opencode.md](opencode.md)) | OpenCode Go | 관리자가 직접 확인(큰 변경은 Claude) |
 | UI 다듬기([ui-polish.md](ui-polish.md)) | 관리자 | Codex |
 
-- 구현한 쪽과 다른 에이전트가 검토하는 것이 교차 검토다. 수정 작업자는 구현자와 같은 계열이다.
+- 구현한 쪽과 다른 에이전트가 검토하는 것이 교차 검토다. 수정 작업자는 구현자와 같은 계열이다. 다만 범위가 분명한 코어 수정, rebase 같은 기계적 작업은 OpenCode Go가 먼저 맡는다([opencode.md](opencode.md)).
 - 한 이슈에 코어와 UI가 섞여 있으면 UI 쪽을 Claude가 맡는다. 코어만 먼저 떼어 Codex에게 맡길 수 있으면 나눠도 된다.
 - 한도가 `ok`가 아니면 이 배치는 [limits.md](limits.md)의 모드로 바뀐다.
 - 넓게 훑어야 하는 짧은 질문은 OpenCode `plan` 에이전트에 먼저 묻는다([opencode.md](opencode.md)).
@@ -74,6 +74,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
 - 명세에 "건드리지 말 파일·영역"과 "선행 이슈 병합 뒤로 미루는 범위"를 구체적으로 적는다.
 - 해당 이슈에 앞부분과 마무리로 나눈다는 댓글을 남긴다.
 - 앞부분은 같은 작업 이름의 브랜치로 먼저 병합해도 되고, 마무리까지 한 브랜치에서 이어 가도 된다. 이슈는 마무리까지 끝났을 때 닫는다.
+- 앞부분이 [opencode.md](opencode.md)의 간단한 구현 기준에 들면 OpenCode Go에 맡긴다.
 - 앞부분으로 떼어 낼 만한 부분이 작거나 선행 이슈와 겹치면 나누지 않는다.
 
 **완료 기준**: 고른 이슈·앞부분 목록을 사용자에게 한 줄로 알렸다. 시작 조건이 남는데 맡기지 않았다면 그 이유도 한 줄로 알렸다(예: "앞부분으로 나눌 수 있는 이슈 없음", "검토 대기 2개").
@@ -142,7 +143,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "Codex �
 병합 방식이 `자동`이면 1부터 차례로 한다.
 
 1. 브랜치를 push하고 [pr-template.md](pr-template.md)로 PR을 만든다. GitHub 이슈면 본문에 `Closes #<n>`을 넣고, 다른 저장소면 이슈 위치를 적는다.
-2. `main`이 그사이 앞으로 갔으면, 해당 구현 작업자에게 `main` 위로 rebase하고 테스트를 다시 돌리라고 맡긴다. 충돌 해결도 작업자가 한다. "main 변경" 안내는 **진행 중인 Dispatch가 구현 작업일 때만** 보낸다. 검토 중인 이슈는 그 검토가 끝난 뒤 다음 구현 지시에 rebase를 넣는다(검토자에게 rebase 안내를 보내지 않는다).
+2. `main`이 그사이 앞으로 갔으면, 같은 worktree에 새 OpenCode 작업자를 띄워 `main` 위로 rebase하고 관련 테스트를 다시 돌리라고 맡긴다. 충돌 해결도 그 작업자가 한다. 같은 동작이 양쪽에서 바뀐 충돌이라 OpenCode가 되돌리고 보고하면 원래 구현 작업자에게 맡긴다([opencode.md](opencode.md)의 "기계적 작업"). "main 변경" 안내는 **진행 중인 Dispatch가 구현 작업일 때만** 보낸다. 검토 중인 이슈는 그 검토가 끝난 뒤 다음 구현 지시에 rebase를 넣는다(검토자에게 rebase 안내를 보내지 않는다).
 3. `gh pr merge <PR> --<병합 방법> --subject "<제목> (<이슈 표시>)"`로 병합하고 원격 브랜치를 지운다. 병합 방법은 프로젝트 설정 "병합" 절(`merge`/`squash`/`rebase`, 없으면 `merge`)이다.
 4. 메인 저장소의 `main`을 pull하고, GitHub 이슈가 아니면 이슈를 닫는다([trackers.md](trackers.md)). `state.md`를 `끝`으로 바꾼다.
 5. 작업자들을 `worker-release`로 정리한다. 재사용한 터미널은 `retained`(`user_takeover` 등)로 남을 수 있다. `worker-list --run <run> --terminal-state reclaimable`이 0이면 정리가 끝난 것이다.
