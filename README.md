@@ -29,10 +29,10 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 | 파일 | 내용 |
 | --- | --- |
-| `docs/agents/orchestration.md` | 스펙 위치, 구현 제약, 환경 준비·테스트 명령, UI 범위, 추가 완료 조건, 실창 검사 등 |
+| `docs/agents/orchestration.md` | 맡길 이슈를 고르는 방식(라벨·마일스톤·선행 관계·완료 기준), 스펙 위치, 구현 제약, 환경 준비·테스트 명령, UI 범위, 추가 완료 조건, 실창 검사 등 |
 | `docs/agents/common-findings.md` | 그 프로젝트의 교차 검토에서 반복된 지적 목록 |
 
-처음 쓰는 프로젝트에서는 두 파일이 없으므로 스킬이 저장소를 훑고 몇 가지를 물어 만든다(`skills/orchestrate-issues/setup.md`). 작업 파일은 각 저장소의 `.local/orchestration/`에 쌓인다.
+특정 이슈 관례(예: `ready-for-agent` 라벨)를 전제하지 않는다. "이슈 고르기" 절이 없을 때만 `ready-for-agent` 라벨, GitHub 이슈 의존 관계, 본문 체크리스트를 기본값으로 쓴다. 처음 쓰는 프로젝트에서는 두 파일이 없으므로 스킬이 저장소를 훑고 몇 가지를 물어 만든다(`skills/orchestrate-issues/setup.md`). 작업 파일은 각 저장소의 `.local/orchestration/`에 쌓인다.
 
 ## 구성
 

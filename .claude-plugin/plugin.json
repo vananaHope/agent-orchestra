@@ -1,7 +1,7 @@
 {
   "name": "agent-orchestra",
   "description": "Orca 위에서 Codex·Claude·OpenCode 작업자를 지휘해 GitHub 이슈를 구현·교차 검토·병합하고, 에이전트 사용 한도를 재는 스킬",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "vananaHope",
     "url": "https://github.com/vananaHope"

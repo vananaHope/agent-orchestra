@@ -6,14 +6,16 @@
 
 다음이 갖춰졌는지 확인하고, 빠진 것은 사용자에게 알린다. 지휘는 갖춰진 뒤에 시작한다.
 
-- GitHub 저장소이고 `gh`가 로그인돼 있다. 이슈에 `ready-for-agent` 라벨을 쓴다(없으면 `docs/agents/triage-labels.md` 또는 라벨 준비를 사용자와 정한다).
+- GitHub 저장소이고 `gh`가 로그인돼 있다.
 - `orca`, `codex`, `opencode` 명령이 있다.
 - `check-limits` 스킬로 잰 Codex와 Claude가 둘 다 `unknown`이 아니다. `unknown`이면 그 스킬이 알려 주는 원인을 사용자에게 전한다.
 - `.gitignore`에 `.local/`이 있다. 없으면 더한다.
 
 ## 2. 설정 초안 쓰기
 
-저장소를 먼저 훑는다: `README`, `AGENTS.md`/`CLAUDE.md`, `CONTEXT.md`, `docs/`, `docs/adr/`, 패키지·빌드 설정, 테스트 폴더, CI 설정. 찾을 수 있는 것은 찾아서 채우고, 저장소로 알 수 없는 것만 사용자에게 묻는다(예: 무엇을 UI로 볼지, 병합 전에 사용자 승인이 필요한 이슈).
+저장소를 먼저 훑는다: `README`, `AGENTS.md`/`CLAUDE.md`, `docs/`, 용어집이나 ADR이 있으면 그것, 패키지·빌드 설정, 테스트 폴더, CI 설정. 이슈 관례는 `gh label list`와 열린 이슈 몇 개(`gh issue list --limit 10 --json number,title,labels,milestone,body`)로 본다. 어떤 라벨이나 마일스톤이 "맡길 이슈"를 나타내는지, 본문에 완료 기준이나 `Blocked by` 줄이 있는지 확인한다.
+
+찾을 수 있는 것은 찾아서 채우고, 저장소로 알 수 없는 것만 사용자에게 묻는다(예: 어떤 이슈를 맡길지, 무엇을 UI로 볼지, 병합 전에 사용자 승인이 필요한 이슈).
 
 아래 양식으로 `docs/agents/orchestration.md`를 쓴다. 절 이름은 SKILL.md와 양식들이 그대로 가리키므로 바꾸지 않는다. 해당 없는 선택 절은 지운다. 각 절은 명세에 그대로 옮겨질 문장으로 쓴다.
 
@@ -22,9 +24,15 @@
 
 `orchestrate-issues` 스킬이 읽는 이 프로젝트의 설정이다.
 
+## 이슈 고르기
+
+- 맡길 이슈: <라벨 `<이름>` / 마일스톤 `<이름>` / 열린 이슈 전부(제외 라벨 `<이름>`)>
+- 선행 관계: <GitHub 이슈 의존 관계 / 본문의 `Blocked by #<m>` 줄 / 없음>
+- 완료 기준: <이슈 본문의 체크리스트 / 본문의 "<절 이름>" 절 / 따로 없음(관리자가 명세에 뽑아 적음)>
+
 ## 스펙과 먼저 읽을 문서
 
-<전체 스펙 이슈(예: `gh issue view 1`, 특히 볼 절), 작업 전 반드시 읽을 문서 목록과 각 문서가 무엇인지>
+<전체 스펙이 있으면 그 위치(예: `gh issue view 1`, 특히 볼 절), 작업 전 반드시 읽을 문서 목록과 각 문서가 무엇인지. 없으면 README와 AGENTS.md만 적는다.>
 
 ## 구현 제약
 
@@ -67,7 +75,7 @@
 
 ## 3. 연결하기
 
-`AGENTS.md`(없으면 `CLAUDE.md`)에 다음 한 줄을 더한다.
+`AGENTS.md`(없으면 `CLAUDE.md`)에 다음 한 줄을 더한다. 둘 다 없으면 건너뛴다(스킬은 설정 파일을 직접 읽는다).
 
 ```markdown
 ### Issue orchestration

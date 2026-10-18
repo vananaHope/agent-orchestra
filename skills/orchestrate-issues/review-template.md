@@ -9,7 +9,8 @@
 
 ## 먼저 읽을 것
 
-- `gh issue view <n> --comments` : 완료 기준 체크리스트(판정 기준)와 앞선 이슈에서 넘어온 지적
+- `gh issue view <n> --comments` : 이슈 내용과 앞선 이슈에서 넘어온 지적
+- 완료 기준(판정 기준): <구현 명세의 "완료 기준"과 같은 위치나 같은 목록>
 - {설정: 스펙과 먼저 읽을 문서}
 - 변경 내용: `git log --oneline main..HEAD`, `git diff main...HEAD`
 
