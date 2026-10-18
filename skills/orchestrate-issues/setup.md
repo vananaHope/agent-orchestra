@@ -1,6 +1,6 @@
 # 프로젝트 설정 만들기
 
-메인 저장소에 프로젝트 설정이 없을 때 한 번 한다. 끝나면 SKILL.md로 돌아가 1단계부터 진행한다.
+메인 저장소에 프로젝트 설정이 없을 때 한 번 한다. 훑기는 짧게 끝내고(몇 초 안의 파일·`gh` 조회만) 바로 설정 창을 띄운다. 끝나면 SKILL.md로 돌아가 사용자가 원래 요청한 일을 이어 간다.
 
 `configure` 스킬로 이미 있는 설정을 고칠 때도 이 문서를 쓴다. 그때는 지금 설정 값을 "(현재)" 선택지로 넣고, 사용자가 고를 절의 창만 띄운다.
 
@@ -13,21 +13,13 @@
 | `docs/agents/orchestration.md`, `docs/agents/common-findings.md` | 저장소에 커밋해 팀과 다른 컴퓨터에서 같이 쓸 때 |
 | `.local/orchestration/settings.md`, `.local/orchestration/common-findings.md` | 회사 저장소처럼 개인 도구 설정을 커밋하지 않을 때 |
 
-어느 쪽인지는 3단계 첫 창에서 묻는다. 이 문서와 SKILL.md에서 "프로젝트 설정", `common-findings.md`는 고른 위치의 파일이다.
+어느 쪽인지는 2단계 첫 창에서 묻는다. 이 문서와 SKILL.md에서 "프로젝트 설정", `common-findings.md`는 고른 위치의 파일이다.
 
-## 1. 전제 확인
-
-다음이 갖춰졌는지 확인하고, 빠진 것은 사용자에게 알린다. 지휘는 갖춰진 뒤에 시작한다.
-
-- 코드 저장소가 GitHub(회사 GitHub Enterprise 포함)이면 `gh`가 그 호스트에 로그인돼 있다(`gh auth status`).
-- `orca`, `codex`, `opencode` 명령이 있다.
-- `check-limits` 스킬로 잰 Codex와 Claude가 둘 다 `unknown`이 아니다. `unknown`이면 그 스킬이 알려 주는 원인을 사용자에게 전한다.
-
-## 2. 훑기
+## 1. 훑기
 
 사용자에게 묻기 전에 저장소로 알 수 있는 것을 먼저 모은다: `README`, `AGENTS.md`/`CLAUDE.md`, `docs/`, 용어집이나 ADR이 있으면 그것, 패키지·빌드 설정, 테스트 폴더, CI 설정, 기본 브랜치(`git symbolic-ref refs/remotes/origin/HEAD`), PR 규칙(브랜치 보호, CODEOWNERS, PR 양식), 이슈 흔적(`gh label list`, `gh issue list --limit 10 --json number,title,labels,milestone,body`, `.scratch/`나 `docs/`의 이슈 같은 md 파일).
 
-## 3. 설정 창으로 묻기
+## 2. 설정 창으로 묻기
 
 `AskUserQuestion` 창으로 묻는다. 훑어서 알아낸 값은 첫 선택지에 "(추천)"을 붙여 넣고, 근거(찾은 파일·라벨)를 설명에 적는다. 사용자는 고르기만 하거나 "Other"로 직접 쓴다. 한 창에 질문 4개까지이므로 아래 차례로 나눠 띄우고, 앞 답에 따라 다음 질문을 고른다.
 
@@ -42,7 +34,7 @@
 
 초안을 다 채우면 마지막 창을 띄운다. 질문은 "이대로 저장할까요?", 선택지는 "저장" / "고칠 곳 있음"이다. "저장" 선택지의 `preview`에 초안 전체를 넣는다. "고칠 곳 있음"이면 어느 절인지 묻고 그 절의 창만 다시 띄운다.
 
-## 4. 쓰기
+## 3. 쓰기
 
 먼저 `.local/`을 Git에서 뺀다. 설정을 커밋하는 프로젝트면 `.gitignore`에, 아니면 `.git/info/exclude`에 더한다(저장소 파일을 바꾸지 않는다). 이미 빠져 있으면(`git check-ignore .local/x`) 건너뛴다.
 
@@ -115,7 +107,7 @@
 
 `common-findings.md`도 같은 위치에 만든다. 처음에는 제목과 다음 문단만 둔다: "교차 검토 보고서(`.local/orchestration/*/review*.md`)에서 반복해 나온 지적을 유형별로 모은다. 구현자는 제출 전에 이 목록으로 스스로 점검하고, 검토자는 이 목록을 먼저 확인한다. 새 유형이 두 번 이상 나오면 관리자가 여기에 더한다. 유형마다 예시(이슈 표시)와 '점검' 한 줄을 둔다."
 
-## 5. 연결하기
+## 4. 연결하기
 
 설정을 `docs/agents/`에 둔 프로젝트만 한다. `AGENTS.md`(없으면 `CLAUDE.md`)에 다음 한 줄을 더한다. 둘 다 없으면 건너뛴다(스킬은 설정 파일을 직접 읽는다).
 
@@ -125,4 +117,13 @@
 Settings for the `orchestrate-issues` skill (agent-orchestra plugin). See `docs/agents/orchestration.md` and `docs/agents/common-findings.md`.
 ```
 
-**완료 기준**: 설정과 `common-findings.md`가 고른 위치에 있고, 사용자가 마지막 창에서 "저장"을 골랐다. 저장소 파일을 바꿨다면 커밋은 사용자가 원할 때 한다.
+## 5. 전제 확인
+
+설정을 저장한 뒤에 한다. 설정 창이 먼저 뜨도록, 시간이 걸리거나 비용이 드는 확인(Codex 한도 측정)은 여기로 미뤘다. 빠진 것은 사용자에게 알리고, 갖춰진 뒤에 지휘를 시작한다. 설정은 그대로 둔다.
+
+- 코드 저장소가 GitHub(회사 GitHub Enterprise 포함)이면 `gh`가 그 호스트에 로그인돼 있다(`gh auth status`).
+- `orca`, `codex`, `opencode` 명령이 있다.
+- `check-limits` 스킬로 잰 Codex와 Claude가 둘 다 `unknown`이 아니다. `unknown`이면 그 스킬이 알려 주는 원인을 사용자에게 전한다.
+
+
+**완료 기준**: 설정과 `common-findings.md`가 고른 위치에 있고, 사용자가 마지막 창에서 "저장"을 골랐고, 전제 확인 결과를 알렸다. 저장소 파일을 바꿨다면 커밋은 사용자가 원할 때 한다.
