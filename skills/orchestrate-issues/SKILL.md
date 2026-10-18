@@ -21,6 +21,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
 - **한도**: `check-limits` 스킬로 Codex와 Claude를 잰다. 다시 재는 때와 판정별 모드는 [limits.md](limits.md)에 있다.
 - **이슈 저장소**: 이슈를 고르고 읽고 표시하고 닫는 방법은 [trackers.md](trackers.md)의 이 프로젝트 종류 절을 따른다. 이 문서에서 "이슈에 댓글", "이슈를 닫는다"는 그 방법으로 한다.
 - **스킬 폴더**: 이 스킬이 불릴 때 받은 기본 디렉터리(`Base directory for this skill`)다. 플러그인 버전이 바뀌면 경로도 바뀌므로, 명세에는 매번 지금 경로를 절대 경로로 쓴다.
+- **실창 잠금**: 프로젝트 설정에 "실창 검사" 절이 있으면 `python -I <스킬 폴더>/scripts/desktop_lock.py install`로 잠금 스크립트를 고정 경로에 둔다([desktop.md](desktop.md) "고정 경로").
 - **기본 브랜치**: 이 문서와 양식의 `main`은 프로젝트 설정 "병합" 절의 기본 브랜치다(없으면 `main`).
 - **Orca 명령**의 정확한 사용법은 이 문서에 없다. Orca 명령을 처음 쓰기 전에 `orchestration` 스킬을 불러 그 안내대로 `orca skills get orchestration`을 읽는다(버전에 맞는 안내가 그쪽에 있다).
 
