@@ -1,6 +1,6 @@
 """Codex 실제 한도를 잰다. 짧은 codex exec를 한 번 돌리고, 그 실행이 남긴 세션 기록의 rate_limits를 읽는다.
 
-사용: python -I <스킬 폴더>/scripts/codex_limit.py [--json]
+사용: python -I <check-limits 스킬 폴더>/scripts/codex_limit.py [--json]
 종료 코드: 0 = 새 작업 가능, 1 = 한도 경고(사용률 80% 이상), 2 = 소진(100%) 또는 확인 실패
 """
 import argparse
@@ -52,6 +52,8 @@ def window(name, value):
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true')
     args = parser.parse_args()

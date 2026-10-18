@@ -8,7 +8,7 @@
 
 - GitHub 저장소이고 `gh`가 로그인돼 있다. 이슈에 `ready-for-agent` 라벨을 쓴다(없으면 `docs/agents/triage-labels.md` 또는 라벨 준비를 사용자와 정한다).
 - `orca`, `codex`, `opencode` 명령이 있다.
-- `python -I <스킬 폴더>/scripts/claude_limit.py`가 `unknown`이 아니다. `unknown`이면 claude-hud의 `display.externalUsageWritePath`가 `~/.claude/claude-usage.json`으로 설정됐는지 확인한다.
+- `check-limits` 스킬로 잰 Codex와 Claude가 둘 다 `unknown`이 아니다. `unknown`이면 그 스킬이 알려 주는 원인을 사용자에게 전한다.
 - `.gitignore`에 `.local/`이 있다. 없으면 더한다.
 
 ## 2. 설정 초안 쓰기

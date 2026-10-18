@@ -1,7 +1,7 @@
 """Claude 실제 한도를 읽는다. claude-hud가 Claude Code 상태 표시줄 입력의 rate_limits를
 ~/.claude/claude-usage.json에 내보낸다(`display.externalUsageWritePath`, 30초마다 갱신).
 
-사용: python -I <스킬 폴더>/scripts/claude_limit.py [--json]
+사용: python -I <check-limits 스킬 폴더>/scripts/claude_limit.py [--json]
 종료 코드: 0 = 새 작업 가능, 1 = 한도 경고(사용률 80% 이상), 2 = 소진(100%) 또는 확인 실패
 """
 import argparse
@@ -22,6 +22,8 @@ def local_time(value):
 
 
 def main():
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true')
     args = parser.parse_args()

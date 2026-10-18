@@ -25,7 +25,7 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 ## 프로젝트에서 쓰기
 
-이슈 구현이나 다음 묶음 진행을 요청하면 `agent-orchestra:orchestrate-issues` 스킬이 불린다. 스킬은 프로젝트마다 다음 두 파일을 읽는다.
+이슈 구현이나 다음 묶음 진행을 요청하면 `agent-orchestra:orchestrate-issues` 스킬이 불린다. 한도만 궁금하면 `agent-orchestra:check-limits`가 불린다. 스킬은 프로젝트마다 다음 두 파일을 읽는다.
 
 | 파일 | 내용 |
 | --- | --- |
@@ -38,16 +38,19 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 ```
 .claude-plugin/          플러그인·마켓플레이스 정의
+skills/check-limits/     Codex·Claude 실제 사용률 측정(따로 불러도 됨)
+  SKILL.md
+  scripts/codex_limit.py, claude_limit.py
 skills/orchestrate-issues/
-  SKILL.md               지휘 흐름과 고정 규칙
+  SKILL.md               역할, 배치, 시작 조건, 1~7단계
+  limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드)
+  opencode.md            OpenCode Go에 맡기는 일
+  fixes.md               수정 작업자와 재검토
+  desktop.md             실창 검사 잠금
+  ui-polish.md           관리자가 직접 하는 UI 다듬기
   setup.md               프로젝트 설정 만들기
-  task-template.md       구현 명세 양식
-  review-template.md     교차 검토 명세 양식
-  pr-template.md         PR 본문 양식
-  scripts/
-    codex_limit.py       Codex 사용률 측정
-    claude_limit.py      Claude 사용률 측정
-    desktop_lock.py      실창 검사 차례 잠금(~/.agent-orchestra/desktop.lock)
+  task-template.md, review-template.md, pr-template.md
+  scripts/desktop_lock.py  실창 검사 차례 잠금(~/.agent-orchestra/desktop.lock)
 ```
 
 ## 바꾸기
