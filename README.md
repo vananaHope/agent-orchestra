@@ -20,7 +20,7 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 - `gh`(로그인), `orca`, `codex`, `opencode` 명령
 - Orca의 `orchestration` 스킬
-- Claude 사용률 측정: [claude-hud](https://github.com/jarrodwatts/claude-hud)의 `~/.claude/plugins/claude-hud/config.json`에 `display.externalUsageWritePath`를 `~/.claude/claude-usage.json`으로 설정
+- Claude 사용률 측정: [claude-hud](https://github.com/jarrodwatts/claude-hud)의 `~/.claude/plugins/claude-hud/config.json`에 `display.externalUsageWritePath`를 `~/.claude/claude-usage.json`의 절대경로(예: `C:/Users/<사용자>/.claude/claude-usage.json`)로 설정. claude-hud 0.11 이상이 필요하고, `~`로 쓰면 파일이 생기지 않는다
 - Python 3.10 이상(보조 스크립트)
 
 ## 프로젝트에서 쓰기

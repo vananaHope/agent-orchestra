@@ -56,7 +56,7 @@
 3. **작업 나누기**: UI 작업 범위(찾은 프런트엔드 폴더, 여러 개 고름), 간단한 구현에서 뺄 영역(여러 개 고름), 실창 검사가 필요한 앱인지.
 4. **등급별 배치**([tiers.md](tiers.md)): 질문 4개. `light`·`standard`·`hard` 구현 목록을 하나씩 묻고, 마지막으로 OpenCode `standard` 크기 상한을 묻는다. `max`는 관리자 몫이라 묻지 않는다.
    - 선택지는 목록 묶음이다. 첫 선택지는 [tiers.md](tiers.md)의 기본 배치에 "(추천)"을 붙인다. 나머지는 강도를 한 단계 올리거나 내린 묶음, OpenCode를 뺀 묶음으로 채운다. 예: `light`면 "opencode → codex@medium (추천)", "codex@medium", "codex@low".
-   - 설명에 지금 기본 모델을 적는다: Codex는 `~/.codex/config.toml`의 `model`·`model_reasoning_effort`, OpenCode는 `~/.config/opencode/opencode.json`의 `model`.
+   - 설명에 지금 기본 모델을 적는다: Codex는 `$CODEX_HOME/config.toml`(없으면 `~/.codex/config.toml`. Orca는 계정마다 `CODEX_HOME`을 따로 둔다)의 `model`·`model_reasoning_effort`, OpenCode는 `~/.config/opencode/opencode.json`의 `model`.
    - 크기 상한 선택지: "파일 4개·변경 200줄 안팎 (추천)", "파일 2개·변경 100줄 안팎", "상한 없음".
    - `opencode` 명령이 없으면 OpenCode가 든 선택지를 빼고, 크기 상한 질문도 뺀다.
    - 다른 모델이나 강도는 "Other"로 `에이전트[:모델][@강도]` 표기를 받는다.

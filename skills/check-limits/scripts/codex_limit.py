@@ -1,4 +1,5 @@
 """Codex 실제 한도를 잰다. 짧은 codex exec를 한 번 돌리고, 그 실행이 남긴 세션 기록의 rate_limits를 읽는다.
+세션 기록은 $CODEX_HOME/sessions(없으면 ~/.codex/sessions)에 있다. Orca는 계정마다 CODEX_HOME을 따로 둔다.
 
 사용: python -I <check-limits 스킬 폴더>/scripts/codex_limit.py [--json]
 종료 코드: 0 = 새 작업 가능, 1 = 한도 경고(사용률 80% 이상), 2 = 소진(100%) 또는 확인 실패
@@ -6,6 +7,7 @@
 import argparse
 import datetime
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -13,7 +15,7 @@ import tempfile
 import time
 
 WARN_PERCENT = 80.0
-SESSIONS = pathlib.Path.home() / '.codex' / 'sessions'
+SESSIONS = pathlib.Path(os.environ.get('CODEX_HOME') or pathlib.Path.home() / '.codex') / 'sessions'
 
 
 def latest_rate_limits(since):
