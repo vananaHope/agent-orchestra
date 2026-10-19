@@ -45,11 +45,17 @@ def window(name, value):
     if not value:
         return None
     resets = value.get('resets_at')
+    minutes = value.get('window_minutes')
+    elapsed = None
+    if resets and minutes:
+        # 창이 지난 비율. 사용률이 이보다 높으면 이 속도로는 초기화 전에 소진된다.
+        elapsed = round(min(max(100 * (1 - (resets - time.time()) / (minutes * 60)), 0.0), 100.0), 1)
     return {
         'name': name,
         'used_percent': float(value.get('used_percent') or 0.0),
-        'window_minutes': value.get('window_minutes'),
+        'window_minutes': minutes,
         'resets_at': datetime.datetime.fromtimestamp(resets).strftime('%Y-%m-%d %H:%M') if resets else None,
+        'elapsed_percent': elapsed,
     }
 
 
@@ -81,7 +87,7 @@ def main():
     else:
         for item in windows:
             print(f"{item['name']}: {item['used_percent']:.0f}% 사용 "
-                  f"(창 {item['window_minutes']}분, 초기화 {item['resets_at']})")
+                  f"(창 {item['window_minutes']}분, {item['elapsed_percent']}% 지남, 초기화 {item['resets_at']})")
         print(f"판정: {status}")
     return {'ok': 0, 'warning': 1}.get(status, 2)
 

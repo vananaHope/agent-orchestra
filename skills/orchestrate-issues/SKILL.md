@@ -90,7 +90,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
    - 작업자가 이슈를 직접 읽을 수 없는 저장소면 이슈 본문을 명세에 옮긴다. 완료 기준이 없으면 뽑아 적는다([trackers.md](trackers.md) 공통).
    - 맡기기 직전에 `state.md`를 `구현 중`으로 쓰고, 이슈를 진행 중으로 표시한다(저장소가 지원하면).
 2. Run이 없으면 만든다(이번 지휘 세션 전체에 Run 하나).
-3. 등급을 정하고 목록에서 작업자를 고른 뒤([tiers.md](tiers.md)), `state.md` 둘째 줄에 `등급: <등급> · 작업자: <표기>`를 적고 맡김 기록에 한 줄을 더한다. 그다음 `worker-start --spec "<명세>" --worktree new-top-level --name <작업 이름>-<slug> --base-branch main --agent <에이전트>`로 시작한다. 모델·강도를 줄 때는 [tiers.md](tiers.md)의 "띄우기"를 따른다(OpenCode는 worktree를 먼저 만든다).
+3. 등급을 정하고 목록에서 작업자를 고른 뒤([tiers.md](tiers.md)), `state.md` 둘째 줄에 `등급: <등급> · 작업자: <표기>`를 적고 맡김 기록에 한 줄을 더한다. 그다음 `worker-start --spec "<명세>" --worktree new-top-level --name <작업 이름>-<slug> --base-branch main --agent <에이전트>`로 시작한다. 모델·강도·Codex fast를 줄 때는 [tiers.md](tiers.md)의 "띄우기"를 따른다(OpenCode와 Codex는 worktree를 먼저 만든다).
 4. **입력이 실제로 제출됐는지 확인한다.** `orca orchestration worker-read --dispatch <id> --source terminal --json`으로 작업자 화면을 읽는다. `draft`에 `[Pasted Content ...]`나 명세 일부가 남아 있으면 붙여넣기만 되고 제출되지 않은 것이다. 이때는 같은 명세를 다시 보내지 말고 `orca terminal send --terminal <handle> --enter`로 Enter만 보낸다.
    - 특히 기존 터미널을 재사용할 때(`--terminal`) 잘 생긴다.
    - `orca terminal read`의 결과에는 draft가 나오지 않으니 이 확인에 쓰지 않는다.

@@ -12,7 +12,7 @@ description: Codex·Claude 사용 한도를 실제 사용률(창별 %·초기화
 이 스킬 폴더(`Base directory for this skill`)의 `scripts/`에 있는 스크립트를 쓴다. 기본은 둘 다 잰다. 사용자가 하나만 물었으면 그것만 잰다.
 
 - **Codex**: `python -I <스킬 폴더>/scripts/codex_limit.py --json`
-  - 짧은 `codex exec`를 한 번 돌리고, 그 실행이 남긴 세션 기록(`$CODEX_HOME/sessions/`, 없으면 `~/.codex/sessions/`)의 `rate_limits`를 읽는다. 창은 `primary`(짧은 창)와 `secondary`(긴 창)다.
+  - 짧은 `codex exec`를 한 번 돌리고, 그 실행이 남긴 세션 기록(`$CODEX_HOME/sessions/`, 없으면 `~/.codex/sessions/`)의 `rate_limits`를 읽는다. 창은 `primary`와 `secondary`이고 길이는 `window_minutes`로 본다(요금제에 따라 창이 하나뿐이거나 `primary`가 7일 창일 수 있다). 창마다 `elapsed_percent`(창이 지난 비율)도 낸다.
   - Codex를 실제로 한 번 호출하므로 사용량이 조금 들고 수십 초가 걸린다. 30분 안에 잰 결과가 이번 대화에 있으면 그것을 쓰고, 측정 시각을 함께 적는다.
 - **Claude**: `python -I <스킬 폴더>/scripts/claude_limit.py --json`
   - claude-hud가 Claude Code 상태 표시줄 입력의 `rate_limits`를 `~/.claude/claude-usage.json`에 30초마다 내보낸다(`~/.claude/plugins/claude-hud/config.json`의 `display.externalUsageWritePath`. claude-hud 0.11 이상, 값은 절대경로여야 하며 `~`로 쓰면 파일이 생기지 않는다). 창은 `five_hour`와 `seven_day`다.
