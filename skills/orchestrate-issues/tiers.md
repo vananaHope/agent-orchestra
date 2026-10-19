@@ -30,6 +30,8 @@
 
 표기는 `에이전트[:모델][@강도]`다. 모델을 빼면 그 에이전트의 기본 모델, 강도를 빼면 기본 강도다. 예: `codex@medium`, `claude:opus@high`, `opencode:opencode-go/deepseek-v4-pro@max`. 검토 목록에는 `관리자`(관리자가 diff를 직접 확인)도 쓸 수 있다.
 
+- Codex 표기 끝의 `+fast`는 fast로 띄웠다는 뜻이다(예: `codex@high+fast`). 표에는 적지 않는다. 관리자가 띄울 때마다 [codex-fast.md](codex-fast.md)의 기준으로 정하고 기록에만 붙인다.
+
 - **계열**은 `opencode`, `codex`, `claude` 셋이다. `관리자`는 Claude가 하므로 `claude` 계열로 본다.
 - `UI` 줄의 구현은 Claude로 고정이다. 검토 목록만 바꿀 수 있다.
 - **2차 의견**은 프로젝트 설정 표 아래 줄에서 `같은 계열 검토일 때만` / `standard 이상` / `모든 검토` 중 하나로 정한다. 없으면 `같은 계열 검토일 때만`이다.
@@ -70,6 +72,7 @@
 구현자와 검토자 모두 같은 방법으로 띄운다.
 
 - **Claude·Codex**: `worker-start ... --agent <에이전트> --model <모델> --effort <강도>`. 강도만 정했으면 모델은 그 에이전트 설정의 기본 모델을 적는다(`--effort`는 `--model`이 있어야 한다). 둘 다 없으면 두 옵션을 뺀다. `--terminal`과는 함께 쓸 수 없다.
+- **Codex fast**: Codex는 띄우기 전에 fast를 켤지 정해 worktree의 Codex 설정으로 준다([codex-fast.md](codex-fast.md)). 그래서 Codex도 worktree를 먼저 만든다.
 - **OpenCode**: Orca가 OpenCode에는 `--model`을 받지 않는다. 모델이나 강도를 정했으면 worktree의 OpenCode 설정으로 준다([opencode.md](opencode.md)의 "모델과 강도"). 둘 다 없으면 `--agent opencode`만 쓴다.
 
 ## 맡김 기록

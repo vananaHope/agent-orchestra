@@ -1,10 +1,10 @@
-"""등급별 배치의 작업자 표기(에이전트[:모델][@강도])가 지금 쓸 수 있는 모델·강도인지 본다.
+"""등급별 배치의 작업자 표기(에이전트[:모델][@강도][+fast])가 지금 쓸 수 있는 모델·강도인지 본다.
 
 사용법:
-    python -I check_tiers.py "opencode@low" "codex:gpt-6-astra@medium" "claude@high"
+    python -I check_tiers.py "opencode@low" "codex:gpt-6-astra@medium" "codex@high+fast" "claude@high"
 
 목록은 플러그인에 박아 두지 않고 각 도구가 스스로 갱신하는 것을 읽는다.
-- Codex: $CODEX_HOME/models_cache.json(모델과 모델별 강도), 기본 모델은 $CODEX_HOME/config.toml의 model.
+- Codex: $CODEX_HOME/models_cache.json(모델과 모델별 강도·fast 지원), 기본 모델은 $CODEX_HOME/config.toml의 model.
   CODEX_HOME이 없으면 ~/.codex다. Orca는 계정마다 CODEX_HOME을 따로 둔다.
 - OpenCode: `opencode models`(모델만. 강도 variant는 목록이 없어 보지 않는다)
 - Claude: 보지 않는다
@@ -27,9 +27,10 @@ CODEX = Path(os.environ.get('CODEX_HOME') or Path.home() / '.codex')
 
 
 def parse(notation):
+    notation, plus, tier = notation.partition('+')
     agent, _, effort = notation.partition('@')
     agent, _, model = agent.partition(':')
-    return agent.strip(), model.strip() or None, effort.strip() or None
+    return agent.strip(), model.strip() or None, effort.strip() or None, tier.strip() if plus else None
 
 
 def codex_models():
@@ -37,7 +38,8 @@ def codex_models():
         data = json.loads((CODEX / 'models_cache.json').read_text(encoding='utf-8'))
     except (FileNotFoundError, ValueError):
         return None
-    return {item['slug']: [level['effort'] for level in item.get('supported_reasoning_levels') or []]
+    return {item['slug']: {'efforts': [level['effort'] for level in item.get('supported_reasoning_levels') or []],
+                           'tiers': item.get('additional_speed_tiers') or []}
             for item in data.get('models', []) if item.get('slug')}
 
 
@@ -67,7 +69,9 @@ def unknown(kind, name, choices):
 
 
 def check(notation, lists):
-    agent, model, effort = parse(notation)
+    agent, model, effort, tier = parse(notation)
+    if tier is not None and agent != 'codex':
+        return f'`+{tier}`는 Codex에만 쓸 수 있음'
     if agent == 'codex':
         models = lists.setdefault('codex', codex_models())
         if models is None:
@@ -75,8 +79,11 @@ def check(notation, lists):
         name = model or codex_default_model()
         if name not in models:
             return unknown('Codex 모델', name or '(기본 모델 없음)', list(models))
-        if effort and models[name] and effort not in models[name]:
-            return f'`{name}`의 강도 `{effort}`이(가) 목록에 없음(가능: {"/".join(models[name])})'
+        efforts = models[name]['efforts']
+        if effort and efforts and effort not in efforts:
+            return f'`{name}`의 강도 `{effort}`이(가) 목록에 없음(가능: {"/".join(efforts)})'
+        if tier is not None and tier not in models[name]['tiers']:
+            return f'`{name}`은(는) `+{tier}`를 지원하지 않음(가능: {"/".join(models[name]["tiers"]) or "없음"})'
         return None
     if agent == 'opencode':
         if not model:

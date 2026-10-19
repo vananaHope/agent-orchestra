@@ -56,6 +56,7 @@ skills/orchestrate-issues/
   limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드)
   tiers.md               등급 기준, 등급별 구현·검토 목록, 검토자 고르기, 관리자 확인, 맡김 기록
   opencode.md            OpenCode Go 조건, 모델·강도 주기, rebase
+  codex-fast.md          Codex fast를 켤지 정하는 기준과 worktree에 주는 방법
   fixes.md               수정 작업자와 재검토
   desktop.md             실창 검사 잠금
   ui-polish.md           관리자가 직접 하는 UI 다듬기
