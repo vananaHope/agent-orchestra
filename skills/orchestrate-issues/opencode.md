@@ -1,6 +1,6 @@
 # OpenCode Go
 
-OpenCode Go는 빠르고 범위가 분명한 일을 맡는다. 어느 일에 쓰는지는 [tiers.md](tiers.md)의 등급별 목록이 정하고, 이 파일은 OpenCode에만 붙는 조건과 방법을 적는다. 결과는 언제나 다른 에이전트가 검증한다(Claude 절약 모드에서는 Codex).
+OpenCode Go는 빠르고 범위가 분명한 일을 맡는다. 어느 일에 쓰는지는 [tiers.md](tiers.md)의 등급별 목록이 정하고, 이 파일은 OpenCode에만 붙는 조건과 방법을 적는다. 결과는 언제나 다른 계열이 검증한다. 누가 검증할지는 등급의 검토 목록이 정한다([tiers.md](tiers.md) "검토자 고르기").
 
 ## 맡기지 않는 일
 
@@ -36,8 +36,7 @@ Orca는 OpenCode 작업자에게 `--model`을 받지 않는다. 대신 OpenCode�
 
 ## 검증
 
-- `light`: 관리자가 diff를 읽고 관련 테스트만 돌린 뒤 `.local/orchestration/<작업 이름>/minor-check-<k>.md`에 결과를 남긴다. 실제 변경이 파일 3개 이상이거나 100줄을 넘으면, 또는 의심스러우면 Claude 검토자를 띄운다([review-template.md](review-template.md)).
-- `standard`: Claude 검토자가 검토한다([review-template.md](review-template.md)).
+- 검토자는 등급의 검토 목록에서 고른다([tiers.md](tiers.md) "검토자 고르기"). `관리자`를 고르면 [tiers.md](tiers.md)의 "관리자 확인"을 한다.
 - 지적 수정은 [fixes.md](fixes.md)의 재검토 규칙을 따른다.
 
 ## rebase
@@ -58,4 +57,8 @@ SKILL.md 6단계 2의 rebase는 `light`다.
 
 ## 2차 의견
 
-대체 모드와 Claude 절약 모드에서 같은 계열끼리 검토할 때, 같은 diff를 `plan` 에이전트에 보여 2차 의견을 받는다. 검토 보고서의 지적과 함께 판정한다.
+주 검토와 따로, 같은 diff를 `plan` 에이전트에 보여 2차 의견을 받는다. 검토 보고서의 지적과 함께 판정한다.
+
+- **언제**: 같은 계열끼리 검토할 때는 항상([tiers.md](tiers.md) "검토자 고르기" 2). 그 밖에는 프로젝트 설정의 2차 의견 값(`standard 이상` / `모든 검토`)을 따른다. 관리자 확인과 rebase에는 받지 않는다.
+- **묻는 내용**: diff 범위(`main..HEAD`), 이슈의 완료 기준, `common-findings.md`의 절대 경로를 주고, 유형별로 해당하는 결함이 있는지 파일·줄 근거와 함께 답하게 한다.
+- **쓰는 법**: 2차 의견의 지적은 관리자가 근거를 직접 확인한 것만 판정에 넣는다. 주 검토 보고서와 겹치지 않는 지적이 있으면 보고서 옆에 `second-opinion-<k>.md`로 남긴다.

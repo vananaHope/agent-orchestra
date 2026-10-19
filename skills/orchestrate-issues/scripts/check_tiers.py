@@ -8,6 +8,7 @@
   CODEX_HOME이 없으면 ~/.codex다. Orca는 계정마다 CODEX_HOME을 따로 둔다.
 - OpenCode: `opencode models`(모델만. 강도 variant는 목록이 없어 보지 않는다)
 - Claude: 보지 않는다
+- 관리자: 검토 목록에만 쓰는 표기라 보지 않는다
 
 목록에 없는 이름은 막지 않고 경고로 낸다. 목록이 늦게 갱신됐을 수 있기 때문이다.
 종료 코드: 0 = 모두 확인됨, 1 = 경고 있음
@@ -86,9 +87,9 @@ def check(notation, lists):
         if model not in models:
             return unknown('OpenCode 모델', model, models)
         return None
-    if agent == 'claude':
+    if agent in ('claude', '관리자'):
         return None
-    return f'에이전트 `{agent}`은(는) codex/opencode/claude가 아님'
+    return f'에이전트 `{agent}`은(는) codex/opencode/claude/관리자가 아님'
 
 
 def main():

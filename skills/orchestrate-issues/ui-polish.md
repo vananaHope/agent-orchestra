@@ -5,7 +5,7 @@
 1. **시점**: 한 화면 묶음의 구현 이슈가 모두 병합된 뒤.
 2. **작업 공간**: `main`에서 분기한 별도 worktree. 메인 작업 폴더에서 하지 않는다.
 3. **방법**: 데스크톱 없이 찍은 스크린샷(방법은 프로젝트 설정)을 보며 고친다. 프로젝트 설정의 "추가 완료 조건"을 그대로 지킨다. 실창이 필요하면 [desktop.md](desktop.md)의 잠금을 쓴다.
-4. **교차 검토**: Codex 검토자(`--agent codex`)를 같은 worktree에 띄운다. 양식은 [review-template.md](review-template.md).
+4. **교차 검토**: `UI` 검토 목록([tiers.md](tiers.md), 기본 Codex)에서 Claude 계열이 아닌 검토자를 골라 같은 worktree에 띄운다. 양식은 [review-template.md](review-template.md). 고를 검토자가 없으면 병합하지 않고 기다린다.
 5. **PR과 병합**: SKILL.md 6단계와 같다. worktree도 병합한 뒤 지운다.
 
 **완료 기준**: 병합됐고, 사용자에게 전후 스크린샷을 보고했다.
