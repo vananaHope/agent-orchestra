@@ -30,7 +30,7 @@
 | 테스트 | 없음. 작업자가 저장소 문서에서 찾는다 | 명령 |
 | UI 작업 | 없음. UI도 등급 목록으로 맡긴다 | 작업 나누기 |
 | 간단한 구현에서 뺄 영역 | 없음. 등급 기준만으로 정한다 | 작업 나누기 |
-| 등급별 배치 | [tiers.md](tiers.md)의 기본 배치, 크기 상한 파일 4개·변경 200줄 안팎 | 등급별 배치 |
+| 등급별 배치 | [tiers.md](tiers.md)의 기본 배치, 크기 상한 파일 4개·변경 200줄 안팎. 표에 검토 목록 열, `UI` 줄, 2차 의견 줄이 없으면 그 부분만 기본값 | 등급별 배치, 검토 배치 |
 | 추가 완료 조건 | 없음 | 명령 |
 | 실창 검사 (선택) | 실창 잠금을 명세에 넣지 않는다 | 작업 나누기 |
 | 확인 자료 (선택) | 없음 | 훑기 |
@@ -61,8 +61,14 @@
    - `opencode` 명령이 없으면 OpenCode가 든 선택지를 빼고, 크기 상한 질문도 뺀다.
    - 다른 모델이나 강도는 "Other"로 `에이전트[:모델][@강도]` 표기를 받는다.
    - 답을 받으면 세 목록의 표기를 모두 `python -I <스킬 폴더>/scripts/check_tiers.py <표기...>`로 본다. 경고가 나오면 막지 않고, 경고와 가까운 이름을 질문에 적어 그 등급만 다시 묻는다. 첫 선택지는 가까운 이름으로 고친 표기 "(추천)", 둘째는 입력한 그대로다.
-5. **명령**: 환경 준비 명령, 관련 테스트 명령, 추가 완료 조건. 찾은 명령(`package.json` scripts, `Makefile`, 설정 스크립트)을 선택지로 낸다.
-6. **작성 규칙**: 메시지 언어(최근 커밋 메시지·PR에서 찾은 언어를 추천), PR 서명 줄("🤖 Generated with Claude Code")을 넣을지. `AGENTS.md`에 이미 정해져 있으면 이 창은 건너뛴다.
+5. **검토 배치**([tiers.md](tiers.md) "검토자 고르기"): 질문 4개. `light`·`standard`·`hard` 검토 목록을 하나씩 묻고, 마지막으로 2차 의견을 묻는다. `UI` 검토 목록은 "UI 작업" 절이 있을 때만 묻고, 그때는 질문이 5개가 되므로 2차 의견을 다음 창으로 넘긴다.
+   - 첫 선택지는 [tiers.md](tiers.md)의 기본 검토 목록에 "(추천)"을 붙인다. 나머지는 Codex를 앞에 둔 묶음(Claude 몫을 줄임), 강도를 한 단계 올린 묶음으로 채운다. 예: `standard`면 "claude → codex (추천)", "codex@high → claude", "claude@high → codex@high".
+   - 설명에 바로 앞 창에서 고른 구현 목록을 적고, 구현자와 같은 계열은 건너뛴다는 규칙을 한 줄로 적는다.
+   - `standard`·`hard`에는 `opencode`가 든 선택지를 내지 않는다(OpenCode는 `light`에서만 주 검토자). "Other"로 넣으면 건너뛴다고 알리고 그대로 저장한다.
+   - 2차 의견 선택지: "같은 계열 검토일 때만 (추천)", "standard 이상", "모든 검토". `opencode` 명령이 없으면 묻지 않는다.
+   - 답을 받으면 검토 목록 표기도 `check_tiers.py`로 본다(`관리자`는 통과).
+6. **명령**: 환경 준비 명령, 관련 테스트 명령, 추가 완료 조건. 찾은 명령(`package.json` scripts, `Makefile`, 설정 스크립트)을 선택지로 낸다.
+7. **작성 규칙**: 메시지 언어(최근 커밋 메시지·PR에서 찾은 언어를 추천), PR 서명 줄("🤖 Generated with Claude Code")을 넣을지. `AGENTS.md`에 이미 정해져 있으면 이 창은 건너뛴다.
 
 아티팩트는 URL을 받은 뒤 `Artifact` `read`와 `ArtifactData` `list`로 컬렉션·필드를 보고(권한 확인은 [trackers.md](trackers.md) "아티팩트"), 필드 대응과 상태 값을 한 창 더 띄워 확인한다. 데이터베이스가 없거나 편집 권한이 없으면 그 사실을 알리고 읽기 전용으로 할지 같은 창에서 묻는다. 로컬 md도 파일 몇 개를 열어 본 뒤 같은 식으로 확인하고, 파일이 Git에서 제외됐는지 `git check-ignore`로 본다([trackers.md](trackers.md) "로컬 md").
 
@@ -128,13 +134,15 @@
 
 ## 등급별 배치
 
-| 등급 | 구현 목록(앞부터) |
-| --- | --- |
-| `light` | <예: opencode → codex@medium> |
-| `standard` | <예: opencode@high → codex@medium> |
-| `hard` | <예: codex@high → claude@high> |
+| 등급 | 구현 목록(앞부터) | 검토 목록(앞부터) |
+| --- | --- | --- |
+| `light` | <예: opencode → codex@medium> | <예: 관리자 → claude → codex> |
+| `standard` | <예: opencode@high → codex@medium> | <예: claude → codex> |
+| `hard` | <예: codex@high → claude@high> | <예: claude → codex> |
+| `UI` | claude | <예: codex → claude. "UI 작업" 절이 없으면 줄을 지운다> |
 
 - OpenCode `standard` 크기 상한: <파일 4개·변경 200줄 안팎 / 파일 2개·변경 100줄 안팎 / 없음>
+- 2차 의견: <같은 계열 검토일 때만 / standard 이상 / 모든 검토>
 
 ## 추가 완료 조건
 
