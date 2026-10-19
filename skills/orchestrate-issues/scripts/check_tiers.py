@@ -4,7 +4,8 @@
     python -I check_tiers.py "opencode@low" "codex:gpt-6-astra@medium" "claude@high"
 
 목록은 플러그인에 박아 두지 않고 각 도구가 스스로 갱신하는 것을 읽는다.
-- Codex: ~/.codex/models_cache.json(모델과 모델별 강도), 기본 모델은 ~/.codex/config.toml의 model
+- Codex: $CODEX_HOME/models_cache.json(모델과 모델별 강도), 기본 모델은 $CODEX_HOME/config.toml의 model.
+  CODEX_HOME이 없으면 ~/.codex다. Orca는 계정마다 CODEX_HOME을 따로 둔다.
 - OpenCode: `opencode models`(모델만. 강도 variant는 목록이 없어 보지 않는다)
 - Claude: 보지 않는다
 
@@ -15,12 +16,13 @@
 import argparse
 import difflib
 import json
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
 
-CODEX = Path.home() / '.codex'
+CODEX = Path(os.environ.get('CODEX_HOME') or Path.home() / '.codex')
 
 
 def parse(notation):
@@ -68,7 +70,7 @@ def check(notation, lists):
     if agent == 'codex':
         models = lists.setdefault('codex', codex_models())
         if models is None:
-            return '확인 못 함: ~/.codex/models_cache.json 없음'
+            return f'확인 못 함: {CODEX / "models_cache.json"} 없음'
         name = model or codex_default_model()
         if name not in models:
             return unknown('Codex 모델', name or '(기본 모델 없음)', list(models))
