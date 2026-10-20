@@ -115,7 +115,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
 
 구현 작업자가 끝나면 `state.md`를 `검토 중`으로 바꾸고, 그 작업자를 `worker-retain`으로 남겨 둔다(수정 지시에 재사용). 그다음 검토 목록에서 검토자를 고른다([tiers.md](tiers.md) "검토자 고르기").
 
-- 에이전트면 [review-template.md](review-template.md)를 채워 **같은 worktree**(`--worktree "id:<worktree id>"`)에 새로 띄운다. 모델·강도는 검토 목록의 표기대로 준다.
+- 에이전트면 [review-template.md](review-template.md)를 채워 **같은 worktree**(`--worktree "id:<worktree id>"`)에 새로 띄운다. 모델·강도는 검토 목록의 표기대로 주고, [tiers.md](tiers.md)의 "띄우기"를 따른다(Codex면 fast를 정한다. 검토는 기본으로 켜는 경우다).
 - `관리자`면 [tiers.md](tiers.md)의 "관리자 확인"을 한다.
 - 2차 의견을 받을 검토면([opencode.md](opencode.md) "2차 의견") 검토자를 띄우면서 함께 묻는다.
 
