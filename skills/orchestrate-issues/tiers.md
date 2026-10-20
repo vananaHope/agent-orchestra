@@ -69,10 +69,10 @@
 
 ## 띄우기
 
-구현자와 검토자 모두 같은 방법으로 띄운다.
+구현자, 검토자, 2차 의견, 지적 수정, rebase 작업자 모두 같은 방법으로 띄운다.
 
 - **Claude·Codex**: `worker-start ... --agent <에이전트> --model <모델> --effort <강도>`. 강도만 정했으면 모델은 그 에이전트 설정의 기본 모델을 적는다(`--effort`는 `--model`이 있어야 한다). 둘 다 없으면 두 옵션을 뺀다. `--terminal`과는 함께 쓸 수 없다.
-- **Codex fast**: Codex는 띄우기 전에 fast를 켤지 정해 worktree의 Codex 설정으로 준다([codex-fast.md](codex-fast.md)). 그래서 Codex도 worktree를 먼저 만든다.
+- **Codex fast**: Codex는 **띄울 때마다** fast를 켤지 정해 worktree의 Codex 설정으로 준다([codex-fast.md](codex-fast.md)). 그래서 Codex도 worktree를 먼저 만든다. 껐어도 정한 결과를 `state.md`에 적는다. `.codex/config.toml`이 없거나 `state.md`에 fast 기록이 없으면 이 단계를 빠뜨린 것이다. 띄우는 절차를 스크립트나 반복문으로 만들어 쓰고 있으면 거기에도 이 단계를 넣는다.
 - **OpenCode**: Orca가 OpenCode에는 `--model`을 받지 않는다. 모델이나 강도를 정했으면 worktree의 OpenCode 설정으로 준다([opencode.md](opencode.md)의 "모델과 강도"). 둘 다 없으면 `--agent opencode`만 쓴다.
 
 ## 맡김 기록
