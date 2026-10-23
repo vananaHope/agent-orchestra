@@ -6,6 +6,8 @@ import type { Activity, Limit, Task } from '../types'
 export const ACTIVE_PHASES = ['구현 중', '검토 중', '수정 중'] as const
 /** 사용자의 지시를 기다리는 단계 */
 export const USER_PHASES = ['지시 대기', 'PR 열림'] as const
+/** 병합까지 끝난 단계. 스냅숏에는 오늘 끝난 것만 남는다. */
+export const DONE_PHASE = '끝'
 /** 작업자가 쉬는데 단계가 그대로면 멈춤으로 보는 시간 */
 export const PARKED_AFTER_MS = 5 * 60 * 1000
 
@@ -124,6 +126,17 @@ export function shortTime(ms: number): string | undefined {
   const date = new Date(ms)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+/** `10/24` (로컬 날짜) */
+export function monthDay(ms: number): string {
+  const date = new Date(ms)
+  return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+}
+
+/** 둘이 같은 날(로컬)인가 */
+export function isSameDay(a: number, b: number): boolean {
+  return new Date(a).toDateString() === new Date(b).toDateString()
 }
 
 /** 경과 시간: `40초`, `12분`, `2시간 5분` */

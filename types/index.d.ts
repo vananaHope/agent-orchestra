@@ -4,7 +4,7 @@ export type Activity = 'working' | 'waiting' | 'idle' | 'none' | 'unknown'
 export type Task = {
   /** `.local/orchestration/<name>/`의 작업 이름 */
   name: string
-  /** state.md 첫 줄: 구현 중, 검토 중, 수정 중, 지시 대기, PR 열림 */
+  /** state.md 첫 줄: 구현 중, 검토 중, 수정 중, 지시 대기, PR 열림, 끝(오늘 끝난 것만) */
   phase: string
   /** state.md 둘째 줄의 등급·작업자 */
   tier?: string
