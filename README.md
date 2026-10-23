@@ -14,8 +14,6 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 /plugin install agent-orchestra@agent-orchestra
 ```
 
-비공개 저장소이므로 `gh auth login`이나 git 자격 증명으로 접근할 수 있어야 한다.
-
 ## 필요한 것
 
 - `gh`(로그인), `orca`, `codex`, `opencode` 명령
@@ -82,7 +80,7 @@ claude plugin install agent-orchestra@agent-orchestra
 ```
 
 - 캐시는 Setup script나 허용 도메인을 바꿀 때, 그리고 약 7일마다 다시 만들어진다. 그때 최신 버전을 받는다. 바로 받고 싶으면 Setup script에 주석 한 줄을 바꿔 캐시를 다시 만들게 한다.
-- 이 저장소는 비공개다. Setup script는 Claude Code가 GitHub 프록시에 붙기 전에 돌기 때문에 위 명령이 인증 없이 실패할 수 있다(확인 안 함). 실패하면 이 저장소의 `skills/`를 지휘할 프로젝트의 `.claude/skills/`에 복사해 커밋하는 방법을 쓴다.
+- 다른 브랜치를 받으려면 `vananaHope/agent-orchestra#<브랜치>`처럼 `#`을 붙인다.
 
 ## 구성
 
