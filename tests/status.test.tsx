@@ -2,7 +2,7 @@ import type { On } from 'claude-code/testing'
 import { expect, test } from 'claude-code/testing'
 
 import type { Snapshot, Task } from '../types'
-import { activityOf, codexLimits, countTasks, isParked, parseState, workerOf } from '../hooks/model.ts'
+import { activityOf, codexLimits, countTasks, isParked, parseState, phaseSections, workerOf } from '../hooks/model.ts'
 import type { OrcaWorker } from '../hooks/model.ts'
 
 /** 세션이 저장해 둔 값처럼 상태를 넣는다(엔진 자리의 state.get 훅). */
@@ -67,6 +67,16 @@ test('개수를 단계와 활동별로 센다', () => {
   expect(counts).toEqual({ 구현: 1, 검토: 1, 수정: 0, waiting: 1, parked: 0, user: 1 })
 })
 
+test('패널의 칸은 단계 순서대로, 빈 단계와 끝난 작업은 빼고, 모르는 단계는 뒤에', () => {
+  const tasks = [
+    task('a', '검토 중', 'working'), task('b', 'PR 열림', 'idle'), task('c', '구현 중', 'working'),
+    task('d', '구현 중', 'waiting'), task('e', '끝', 'idle'), task('f', '보류', 'idle'),
+  ]
+  expect(phaseSections(tasks, NOW).map(section => [section.phase, section.tasks.map(item => item.name)])).toEqual([
+    ['구현 중', ['d', 'c']], ['검토 중', ['a']], ['PR 열림', ['b']], ['보류', ['f']],
+  ])
+})
+
 const BAND = {
   plugin: 'agent-orchestra',
   component: 'AbovePrompt',
@@ -122,16 +132,19 @@ test('끝난 작업은 띠의 개수에 넣지 않는다', async ($, on) => {
   await ui.unmount()
 })
 
-test('패널은 오늘 할 일 수 아래 진행중과 완료를 날짜와 함께 보여 준다', async ($, on) => {
-  seed(on, { isManager: true, snapshot: SNAP })
+test('패널은 오늘 할 일 수 아래 단계마다 칸을 나눠 작업을 날짜와 함께 보여 준다', async ($, on) => {
+  seed(on, { isManager: true, snapshot: { ...SNAP, tasks: [...SNAP.tasks, task('issue-14', '구현 중', 'working')] } })
   const day = `${String(new Date(NOW).getMonth() + 1).padStart(2, '0')}/${String(new Date(NOW).getDate()).padStart(2, '0')}`
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect(await ui.find({ type: 'Text', text: /오늘 할 일 4/ })).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /^진행중$/ })).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /^완료$/ })).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /issue-13.*입력 기다림/ })).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /issue-12.*구현 중/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /오늘 할 일 5/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /^구현 중 2$/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /^검토 중 1$/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /^지시 대기 1$/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /^완료 1$/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /^수정 중/ })).toBeFalsy()
+    expect(await ui.find({ type: 'Text', text: /issue-12  codex@high/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /issue-13  claude  입력 기다림/ })).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /✓ issue-8/ })).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: day })).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /10-30 09:39/ })).toBeTruthy()

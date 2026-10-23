@@ -5,15 +5,15 @@
 //
 // 모양은 ClaudeRipple의 터미널 표기를 따른다. 띠는 기호와 값을 두 칸 간격으로 늘어놓은 조용한 한 줄이고,
 // 평소에는 흐리게, 볼 일이 있을 때만 노랑(입력 기다림)과 빨강(멈춤)을 쓴다. 패널은 `오늘 할 일 N` 아래
-// 진행중(끝나지 않은 작업)과 완료(오늘 끝난 작업)를 `● 이름  단계 … 10/24` 한 줄씩 늘어놓는다.
+// 단계마다(구현 중 … PR 열림, 오늘 끝난 것은 완료) 칸을 나눠 `● 이름  작업자 … 10/24` 한 줄씩 늘어놓는다.
 
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Limit, Snapshot, Task } from '../types'
 import {
-  ACTIVE_PHASES, ACTIVITY_LABEL, DONE_PHASE, USER_PHASES, ago, activityOf, bar, byUrgency, claudeLimits, codexLimits, cols,
-  countTasks, isParked, isSameDay, limitGroups, monthDay, parseState, workerOf,
+  ACTIVE_PHASES, ACTIVITY_LABEL, DONE_PHASE, USER_PHASES, ago, activityOf, bar, claudeLimits, codexLimits, cols,
+  countTasks, isParked, isSameDay, limitGroups, monthDay, parseState, phaseSections, workerOf,
 } from './model.ts'
 import type { OrcaWorker } from './model.ts'
 
@@ -310,17 +310,18 @@ export const register: Register = (on, options) => {
     const snap = await read($, snapshot)
     if (!snap) return <Text dimColor wrap="wrap">지휘를 시작하면 여기에 작업이 나옵니다.</Text>
     const now = await $.clock.now()
-    const open = byUrgency(snap.tasks.filter(task => !isDone(task)), now)
+    const sections = phaseSections(snap.tasks, now)
+    const openCount = sections.reduce((sum, section) => sum + section.tasks.length, 0)
     const done = snap.tasks.filter(isDone).sort((a, b) => b.phaseSince - a.phaseSince)
     // 처음 아홉 개의 열기에 숫자 키를 그린 차례대로 준다.
     let hotkeys = 0
     const nextKey = () => (++hotkeys <= 9 ? String(hotkeys) : undefined)
 
-    // 진행중 한 줄: `● 이름  단계 … 10/24  1: 열기`. 기호와 단계의 색이 상태다(보라 진행, 노랑 입력 대기, 빨강 멈춤).
-    // 입력 대기·멈춤이면 단계 대신 그 말을 쓴다. 폭을 넘으면 이름 쪽 끝을 자른다.
+    // 작업 한 줄: `● 이름  codex@high  입력 기다림 … 10/24  1: 열기`. 칸이 단계라 단계는 다시 쓰지 않는다.
+    // 기호의 색이 활동이다(보라 일하는 중, 노랑 입력 대기, 빨강 멈춤). 폭을 넘으면 이름 쪽 끝을 자른다.
     const openRow = (task: Task) => {
       const label = labelOf(task, now)
-      const word = label.color === WARN || label.color === BAD ? label.word : task.phase
+      const alert = label.color === WARN || label.color === BAD ? label.word : undefined
       const terminal = isActive(task) ? task.terminal : undefined
       const key = terminal ? nextKey() : undefined
       return (
@@ -328,7 +329,8 @@ export const register: Register = (on, options) => {
           <Text wrap="truncate-end">
             <Text color={label.color}>{label.mark} </Text>
             <Text bold>{task.name}</Text>
-            <Text color={label.color} dimColor={!label.color}>{'  ' + word}</Text>
+            {task.worker ? <Text dimColor>{'  ' + task.worker}</Text> : null}
+            {alert ? <Text color={label.color}>{'  ' + alert}</Text> : null}
           </Text>
           <Box flexDirection="row" columnGap={2}>
             <Text dimColor>{monthDay(task.phaseSince)}</Text>
@@ -361,17 +363,20 @@ export const register: Register = (on, options) => {
       </Text>
     )
 
+    // 칸 하나: 제목과 개수, 줄, 작업들. 작업자가 붙는 단계는 보라, 사용자 차례는 기본색, 완료는 초록.
+    const section = (title: string, color: string | undefined, rows: JSX.Element[]) => [
+      <Text key={'gap-' + title}> </Text>,
+      <Text key={'title-' + title} bold color={color}>{title} <Text dimColor>{rows.length}</Text></Text>,
+      <Text key={'rule-' + title} dimColor>{'─'.repeat(width)}</Text>,
+      ...rows,
+    ]
+
     return (
       <Box flexDirection="column" width="100%">
-        <Text bold>오늘 할 일 <Text color={ACCENT}>{open.length + done.length}</Text></Text>
-        <Text> </Text>
-        <Text bold color={ACCENT}>진행중</Text>
-        {rule}
-        {open.length ? open.map(openRow) : <Text dimColor>없음</Text>}
-        <Text> </Text>
-        <Text bold color={GOOD}>완료</Text>
-        {rule}
-        {done.length ? done.map(doneRow) : <Text dimColor>없음</Text>}
+        <Text bold>오늘 할 일 <Text color={ACCENT}>{openCount + done.length}</Text></Text>
+        {sections.flatMap(({ phase, tasks }) => section(phase, isActive({ phase }) ? ACCENT : undefined, tasks.map(openRow)))}
+        {done.length ? section('완료', GOOD, done.map(doneRow)) : null}
+        {!openCount && !done.length ? <Text dimColor>오늘 할 일이 없습니다</Text> : null}
         <Text> </Text>
         {rule}
         <Text bold>한도</Text>
