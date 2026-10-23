@@ -4,16 +4,16 @@
 // 한도는 세션이 받은 Claude 창과 check-limits의 codex_limit.py에서 온다.
 //
 // 모양은 ClaudeRipple의 터미널 표기를 따른다. 띠는 기호와 값을 두 칸 간격으로 늘어놓은 조용한 한 줄이고,
-// 평소에는 흐리게, 볼 일이 있을 때만 노랑(입력 기다림)과 빨강(멈춤)을 쓴다. 패널은 작업마다
-// `● 이름  단계  1: 열기` 한 줄 아래에 작업자와 `▸ 지금 상태`를 들여 쓴 카드다.
+// 평소에는 흐리게, 볼 일이 있을 때만 노랑(입력 기다림)과 빨강(멈춤)을 쓴다. 패널은 `오늘 할 일 N` 아래
+// 진행중(끝나지 않은 작업)과 완료(오늘 끝난 작업)를 `● 이름  단계 … 10/24` 한 줄씩 늘어놓는다.
 
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Limit, Snapshot, Task } from '../types'
 import {
-  ACTIVE_PHASES, ACTIVITY_LABEL, USER_PHASES, ago, activityOf, bar, byUrgency, claudeLimits, codexLimits, cols,
-  countTasks, isParked, limitGroups, parseState, workerOf,
+  ACTIVE_PHASES, ACTIVITY_LABEL, DONE_PHASE, USER_PHASES, ago, activityOf, bar, byUrgency, claudeLimits, codexLimits, cols,
+  countTasks, isParked, isSameDay, limitGroups, monthDay, parseState, workerOf,
 } from './model.ts'
 import type { OrcaWorker } from './model.ts'
 
@@ -27,6 +27,7 @@ const CODEX_SCRIPT = 'skills/check-limits/scripts/codex_limit.py'
 const ACCENT = 'suggestion'
 const WARN = 'warning'
 const BAD = 'error'
+const GOOD = 'success'
 
 const isManager = atom({ plugin: 'agent-orchestra', key: 'isManager' } as const, false)
 const isBandOff = atom({ plugin: 'agent-orchestra', key: 'isBandOff' } as const, false)
@@ -45,6 +46,10 @@ function errorText(error: unknown): string {
 
 function isActive(task: { phase: string }): boolean {
   return (ACTIVE_PHASES as readonly string[]).includes(task.phase)
+}
+
+function isDone(task: { phase: string }): boolean {
+  return task.phase === DONE_PHASE
 }
 
 function limitColor(percent: number): string | undefined {
@@ -69,7 +74,8 @@ async function orcaJson($: EngineInterface, argv: string[]): Promise<Record<stri
   return parsed.result
 }
 
-async function readTasks($: EngineInterface, base: string): Promise<Omit<Task, 'activity'>[]> {
+/** 끝나지 않은 작업 전부와 오늘 끝난 작업 */
+async function readTasks($: EngineInterface, base: string, now: number): Promise<Omit<Task, 'activity'>[]> {
   const dir = `${base}/.local/orchestration`
   if (!await $.fs.exists(dir)) return []
   const tasks: Omit<Task, 'activity'>[] = []
@@ -79,7 +85,7 @@ async function readTasks($: EngineInterface, base: string): Promise<Omit<Task, '
     const stat = await $.fs.stat(file).catch(() => undefined)
     if (!stat) continue
     const state = parseState(await $.fs.read(file))
-    if (!state.phase || state.phase === '끝') continue
+    if (!state.phase || (state.phase === DONE_PHASE && !isSameDay(stat.mtimeMs, now))) continue
     tasks.push({ name: entry.name, ...state, phaseSince: stat.mtimeMs })
   }
   return tasks
@@ -96,7 +102,7 @@ async function collect($: EngineInterface, previous: Snapshot | null): Promise<S
   const now = await $.clock.now()
   const errors: string[] = []
   const base = await repoRoot($).catch(error => (errors.push(errorText(error)), null))
-  const found = base ? await readTasks($, base).catch(error => (errors.push(errorText(error)), [])) : []
+  const found = base ? await readTasks($, base, now).catch(error => (errors.push(errorText(error)), [])) : []
 
   let workers: OrcaWorker[] = []
   const outputs = new Map<string, number>()
@@ -142,6 +148,11 @@ async function isPaneOpen($: EngineInterface): Promise<boolean> {
   return (await $.ui.panes()).some(pane => pane.id === PANE)
 }
 
+/** 열려 있고 지금 화면에 그려져 있다(띠의 `패널 ●`) */
+async function isPaneShown($: EngineInterface): Promise<boolean> {
+  return (await $.ui.panes()).some(pane => pane.id === PANE && pane.isShown && pane.isPlaced)
+}
+
 /** 띠가 보이거나 패널이 열려 있을 때만 다시 읽는다. */
 async function tick($: EngineInterface) {
   if (runtime.isRunning || !await read($, isManager)) return
@@ -164,9 +175,10 @@ function startPolling($: EngineInterface) {
   void tick($)
 }
 
-/** 열려 있으면 닫고, 닫혀 있으면 연다. 열었으면 true */
+/** 보이면 닫고, 닫혀 있거나 다른 탭 뒤·좁아서 못 그린 채 열려 있으면 다시 연다. 열었으면 true */
 async function togglePane($: EngineInterface): Promise<boolean> {
-  const wasOpen = await isPaneOpen($)
+  const pane = (await $.ui.panes()).find(item => item.id === PANE)
+  const wasOpen = !!pane && pane.isShown && pane.isPlaced
   if (wasOpen) await $.ui.close({ id: PANE })
   else await $.ui.open({ id: PANE, title: '지휘 상태' })
   // 띠의 `패널 ●/○`이 바로 바뀌게
@@ -229,12 +241,25 @@ export const register: Register = (on, options) => {
     return { text: await togglePane($) ? '지휘 상태 패널을 열었습니다.' : '지휘 상태 패널을 닫았습니다.' }
   })
 
+  // 사람이 패널의 닫기 표시나 Esc로 닫아도 띠의 `패널 ●/○`이 따라오게
+  on('ui.close', async ($, e, next) => {
+    const closed = await next(e)
+    if (e.id === PANE) $.ui.invalidate('ui.render')
+    return closed
+  })
+
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (!runtime.statusBand || e.props.hasSurvey || !await read($, isManager) || await read($, isBandOff)) return next(e)
     const { Box, Button, Text } = $.ui.resolve(e)
     const snap = await read($, snapshot)
-    const paneOpen = await isPaneOpen($)
-    const control = <Button key="pane" plain hotkey="p" label={`패널 ${paneOpen ? '●' : '○'}`} onPress={() => togglePane($)} />
+    const paneShown = await isPaneShown($)
+    // 단축키는 띠가 키를 쥘 때만 눌린다(ctrl+x tab이나 클릭). 프롬프트에서 친 p는 글자로 들어간다.
+    const control = (
+      <Box key="pane-control" flexDirection="row" columnGap={1}>
+        <Button key="pane" plain hotkey="p" label={`패널 ${paneShown ? '●' : '○'}`} onPress={() => togglePane($)} />
+        <Text dimColor>ctrl+x tab</Text>
+      </Box>
+    )
     if (!snap) {
       return (
         <Box flexDirection="row" columnGap={2} alignItems="center">
@@ -245,10 +270,11 @@ export const register: Register = (on, options) => {
       )
     }
     const now = await $.clock.now()
-    const counts = countTasks(snap.tasks, now)
-    const waiting = snap.tasks.filter(task => task.activity === 'waiting')
-    const parked = snap.tasks.filter(task => isParked(task, now))
-    const working = snap.tasks.filter(task => isActive(task) && task.activity === 'working' && !isParked(task, now)).length
+    const open = snap.tasks.filter(task => !isDone(task))
+    const counts = countTasks(open, now)
+    const waiting = open.filter(task => task.activity === 'waiting')
+    const parked = open.filter(task => isParked(task, now))
+    const working = open.filter(task => isActive(task) && task.activity === 'working' && !isParked(task, now)).length
     const phases = [['구현', counts.구현], ['검토', counts.검토], ['수정', counts.수정]].filter(([, n]) => n).map(([name, n]) => `${name} ${n}`).join(' · ')
     // 하나뿐이면 이름으로: 무엇을 봐야 하는지 바로 안다.
     const named = (list: Task[], word: string) => list.length === 1 ? `${list[0]!.name} ${word}` : `${word} ${list.length}`
@@ -261,7 +287,7 @@ export const register: Register = (on, options) => {
         {working ? <Text color={ACCENT}>● 일하는 중 {working}</Text> : null}
         {phases ? <Text dimColor>{phases}</Text> : null}
         {counts.user ? <Text color={ACCENT}>◇ 지시 대기 {counts.user}</Text> : null}
-        {!snap.tasks.length ? <Text dimColor>○ 진행 중인 작업 없음</Text> : null}
+        {!open.length ? <Text dimColor>○ 진행 중인 작업 없음</Text> : null}
         {snap.limits.length ? <Text dimColor>│</Text> : null}
         {limitGroups(snap.limits).map(group => (
           <Text>
@@ -284,47 +310,38 @@ export const register: Register = (on, options) => {
     const snap = await read($, snapshot)
     if (!snap) return <Text dimColor wrap="wrap">지휘를 시작하면 여기에 작업이 나옵니다.</Text>
     const now = await $.clock.now()
-    const tasks = byUrgency(snap.tasks, now)
-    const live = tasks.filter(isActive)
-    const waiting = tasks.filter(task => (USER_PHASES as readonly string[]).includes(task.phase))
+    const open = byUrgency(snap.tasks.filter(task => !isDone(task)), now)
+    const done = snap.tasks.filter(isDone).sort((a, b) => b.phaseSince - a.phaseSince)
     // 처음 아홉 개의 열기에 숫자 키를 그린 차례대로 준다.
     let hotkeys = 0
     const nextKey = () => (++hotkeys <= 9 ? String(hotkeys) : undefined)
 
-    // 카드 한 장: 이름과 열기, 단계와 상태, 작업자, 시간. 줄마다 폭을 넘으면 끝을 자른다(줄바꿈 없음).
-    const card = (task: Task) => {
+    // 진행중 한 줄: `● 이름  단계 … 10/24  1: 열기`. 기호와 단계의 색이 상태다(보라 진행, 노랑 입력 대기, 빨강 멈춤).
+    // 입력 대기·멈춤이면 단계 대신 그 말을 쓴다. 폭을 넘으면 이름 쪽 끝을 자른다.
+    const openRow = (task: Task) => {
       const label = labelOf(task, now)
-      const who = [task.worker ?? task.agent, task.tier].filter(Boolean).join(' · ')
-      const terminal = task.terminal
+      const word = label.color === WARN || label.color === BAD ? label.word : task.phase
+      const terminal = isActive(task) ? task.terminal : undefined
       const key = terminal ? nextKey() : undefined
       return (
-        <Box key={'task-' + task.name} flexDirection="column">
-          <Box flexDirection="row" justifyContent="space-between" width="100%">
-            <Text wrap="truncate-end">
-              <Text color={label.color}>{label.mark} </Text>
-              <Text bold>{task.name}</Text>
-            </Text>
+        <Box key={'task-' + task.name} flexDirection="row" justifyContent="space-between" width="100%">
+          <Text wrap="truncate-end">
+            <Text color={label.color}>{label.mark} </Text>
+            <Text bold>{task.name}</Text>
+            <Text color={label.color} dimColor={!label.color}>{'  ' + word}</Text>
+          </Text>
+          <Box flexDirection="row" columnGap={2}>
+            <Text dimColor>{monthDay(task.phaseSince)}</Text>
             {terminal ? <Button key={'open-' + task.name} plain {...(key ? { hotkey: key } : {})} dimColor label="열기" onPress={() => openWorker($, terminal)} /> : null}
           </Box>
-          <Text wrap="truncate-end">
-            {'  '}<Text dimColor>{task.phase} · </Text>
-            <Text color={label.color} dimColor={!label.color}>{label.word}</Text>
-          </Text>
-          {who ? <Text dimColor wrap="truncate-end">{'  ' + who}</Text> : null}
-          <Text dimColor wrap="truncate-end">
-            {'  ' + ago(now - task.phaseSince) + '째' + (task.lastOutputAt ? ` · 출력 ${ago(now - task.lastOutputAt)} 전` : '')}
-          </Text>
         </Box>
       )
     }
 
-    const waitingLine = (task: Task) => (
-      <Box key={'wait-' + task.name} flexDirection="column">
-        <Box flexDirection="row" justifyContent="space-between" width="100%">
-          <Text wrap="truncate-end"><Text color={ACCENT}>◇ </Text>{task.name}</Text>
-          <Text dimColor>{ago(now - task.phaseSince)}째</Text>
-        </Box>
-        <Text dimColor wrap="truncate-end">{'  ' + [task.phase, task.worker ?? task.agent].filter(Boolean).join(' · ')}</Text>
+    const doneRow = (task: Task) => (
+      <Box key={'done-' + task.name} flexDirection="row" justifyContent="space-between" width="100%">
+        <Text wrap="truncate-end"><Text color={GOOD}>✓ </Text>{task.name}</Text>
+        <Text dimColor>{monthDay(task.phaseSince)}</Text>
       </Box>
     )
 
@@ -346,14 +363,16 @@ export const register: Register = (on, options) => {
 
     return (
       <Box flexDirection="column" width="100%">
-        <Text wrap="truncate-end">
-          <Text bold>{live.length ? `진행 ${live.length}` : '진행 중인 작업 없음'}</Text>
-          {waiting.length ? <Text dimColor>{'  ·  '}지시 대기 {waiting.length}</Text> : null}
-        </Text>
+        <Text bold>오늘 할 일 <Text color={ACCENT}>{open.length + done.length}</Text></Text>
+        <Text> </Text>
+        <Text bold color={ACCENT}>진행중</Text>
         {rule}
-        {live.length ? <Box flexDirection="column" rowGap={1}>{live.map(card)}</Box> : null}
-        {live.length && waiting.length ? rule : null}
-        {waiting.length ? <Box flexDirection="column" rowGap={1}>{waiting.map(waitingLine)}</Box> : null}
+        {open.length ? open.map(openRow) : <Text dimColor>없음</Text>}
+        <Text> </Text>
+        <Text bold color={GOOD}>완료</Text>
+        {rule}
+        {done.length ? done.map(doneRow) : <Text dimColor>없음</Text>}
+        <Text> </Text>
         {rule}
         <Text bold>한도</Text>
         {groups.length ? null : <Text dimColor>아직 잰 값이 없습니다</Text>}
@@ -365,7 +384,7 @@ export const register: Register = (on, options) => {
           <Text dimColor>{ago(now - snap.at)} 전</Text>
           <Box flexDirection="row" columnGap={2}>
             <Button key="refresh" plain hotkey="r" dimColor label="새로 고침" onPress={() => tick($)} />
-            <Button key="close" plain hotkey="x" dimColor label="닫기" onPress={() => togglePane($)} />
+            <Button key="close" plain hotkey="p" dimColor label="닫기" onPress={() => togglePane($)} />
           </Box>
         </Box>
       </Box>

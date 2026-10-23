@@ -82,7 +82,10 @@ const PANE = {
 
 const SNAP: Snapshot = {
   at: NOW, root: 'C:/repo',
-  tasks: [task('issue-12', '구현 중', 'working', { worker: 'codex@high' }), task('issue-13', '검토 중', 'waiting', { worker: 'claude' }), task('issue-9', '지시 대기', 'idle')],
+  tasks: [
+    task('issue-12', '구현 중', 'working', { worker: 'codex@high' }), task('issue-13', '검토 중', 'waiting', { worker: 'claude' }),
+    task('issue-9', '지시 대기', 'idle'), task('issue-8', '끝', 'idle'),
+  ],
   limits: [{ name: 'Codex 7d', percent: 6, resets: '10-30 09:39' }, { name: 'Claude 5h', percent: 85 }],
   errors: [],
 }
@@ -112,13 +115,25 @@ test('지휘 세션의 띠는 단계·입력 대기·한도를 한 줄로 보여
   }
 })
 
-test('패널은 진행 중인 작업 카드와 지시 대기 줄, 한도를 보여 준다', async ($, on) => {
+test('끝난 작업은 띠의 개수에 넣지 않는다', async ($, on) => {
+  seed(on, { isManager: true, snapshot: { ...SNAP, tasks: [task('issue-8', '끝', 'idle')] } })
+  const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /진행 중인 작업 없음/ })).toBeTruthy()
+  await ui.unmount()
+})
+
+test('패널은 오늘 할 일 수 아래 진행중과 완료를 날짜와 함께 보여 준다', async ($, on) => {
   seed(on, { isManager: true, snapshot: SNAP })
+  const day = `${String(new Date(NOW).getMonth() + 1).padStart(2, '0')}/${String(new Date(NOW).getDate()).padStart(2, '0')}`
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect(await ui.find({ type: 'Text', text: /진행 2/ })).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /입력 기다림/ })).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /issue-9/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /오늘 할 일 4/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /^진행중$/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /^완료$/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /issue-13.*입력 기다림/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /issue-12.*구현 중/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /✓ issue-8/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: day })).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /10-30 09:39/ })).toBeTruthy()
     await ui.unmount()
   }
