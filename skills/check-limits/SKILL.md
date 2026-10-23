@@ -43,7 +43,3 @@ Codex warning — primary 83%(13:10 초기화), secondary 41%(10-23 09:00 초기
 ```
 
 **완료 기준**: 잰 에이전트마다 판정과 창별 숫자, 초기화 시각, 측정 시각이 보고에 있다. `unknown`이면 원인이 있다.
-
-## 클라우드 세션
-
-`CLAUDE_CODE_REMOTE`가 `true`면 Claude는 재지 않고 `ok`로 보고한다(`claude_limit.py`를 돌리지 않는다). 보고 줄은 `Claude ok — 측정 안 함(클라우드) · <시각>`이다. Codex는 위와 같이 잰다. 판정에 따른 처리는 orchestrate-issues의 limits.md "클라우드 세션" 절에 있다.
