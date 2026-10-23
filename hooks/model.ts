@@ -199,3 +199,12 @@ export function byUrgency(tasks: readonly Task[], now: number): Task[] {
     task.activity === 'working' ? 2 : (USER_PHASES as readonly string[]).includes(task.phase) ? 4 : 3
   return [...tasks].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
 }
+
+/** 패널의 칸: 단계 순서(구현 중 → … → PR 열림), 모르는 단계는 그 뒤. 끝난 작업과 빈 칸은 뺀다. 칸 안은 급한 순서. */
+export function phaseSections(tasks: readonly Task[], now: number): { phase: string; tasks: Task[] }[] {
+  const known: string[] = [...ACTIVE_PHASES, ...USER_PHASES]
+  const others = [...new Set(tasks.map(task => task.phase))].filter(phase => !known.includes(phase) && phase !== DONE_PHASE).sort()
+  return [...known, ...others]
+    .map(phase => ({ phase, tasks: byUrgency(tasks.filter(task => task.phase === phase), now) }))
+    .filter(section => section.tasks.length)
+}
