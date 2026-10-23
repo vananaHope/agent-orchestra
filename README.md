@@ -55,7 +55,7 @@ Claude Code 클라우드 세션(claude.ai/code, 모바일 앱)에서는 Orca 없
 claude.ai/code에서 개인 클라우드 환경을 하나 만든다(세션 제목 줄의 환경 메뉴 → 추가). 환경 변수는 그 환경을 쓰는 사람이 모두 볼 수 있으니 공유 환경에 넣지 않는다.
 
 1. **Network access**: Custom으로 두고 기본 목록을 포함한 채 Allowed domains에 더한다. `chatgpt.com`, `auth.openai.com`, `api.openai.com`(Codex), `opencode.ai`, `models.dev`(OpenCode). 쓰는 OpenCode 모델 제공자의 호스트도 더한다. 막히면 에러에 나온 호스트를 더한다.
-2. **Setup script**: `npm install -g @openai/codex opencode-ai`. 결과가 캐시되므로 세션마다 다시 설치하지 않는다.
+2. **Setup script**: `npm install -g @openai/codex @opencode/cli`. OpenCode는 v2(`@opencode/cli`)다. v1 패키지 `opencode-ai`는 `run` 옵션이 달라 쓰지 않는다. 결과가 캐시되므로 세션마다 다시 설치하지 않는다.
 3. **Codex 구독 로그인**: PC에서 클라우드 전용 로그인을 따로 만든다. 평소 `~/.codex` 로그인은 건드리지 않는다. 갱신 토큰이 한 번 쓰면 바뀌므로 PC의 `auth.json`을 그대로 복사하면 PC 쪽이 로그아웃될 수 있다.
 
    ```powershell

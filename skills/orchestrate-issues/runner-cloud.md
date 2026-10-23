@@ -88,15 +88,18 @@ codex exec -C <worktree> \
 
 ### OpenCode
 
+OpenCode v2(`@opencode/cli`) 기준이다. v2의 `run`에는 `--dir`·`--variant`가 없다. 폴더는 실행 위치로, 강도는 모델 뒤 `#<강도>`로 준다.
+
 ```bash
-opencode run --dir <worktree> -m <provider/model> --variant <강도> --auto --format json \
+cd <worktree> && opencode run --standalone -m <provider/model>#<강도> --auto --format json \
   "$(cat <명세 절대 경로>)" > <작업 폴더>/opencode-<k>.jsonl 2>&1
 ```
 
-- 백그라운드 Bash로 돌린다. 모델·강도를 정하지 않았으면 `-m`·`--variant`를 뺀다. 로컬처럼 `opencode.json`을 쓰지 않는다.
+- 백그라운드 Bash로 돌린다. 모델·강도를 정하지 않았으면 `-m`을 빼고, 모델만 정했으면 `#<강도>`를 뺀다. 로컬처럼 `opencode.json`을 쓰지 않는다.
+- `--standalone`은 작업자마다 따로 서버를 띄운다. 빼면 공용 백그라운드 서비스에 붙는데, 여러 worktree의 작업자가 동시에 돌 때 섞이지 않게 쓴다.
 - `--auto`가 없으면 권한 요청에서 멈춘다.
-- 이벤트의 `sessionID`를 `state.md`에 `OpenCode 세션: <ID>`로 적는다. 마지막 응답은 마지막 텍스트 이벤트다.
-- 빠른 답변·2차 의견(`opencode run --agent plan`)은 로컬과 같다. 메인 저장소나 worktree에서 `--dir`로 돌린다.
+- 이벤트의 세션 ID를 `state.md`에 `OpenCode 세션: <ID>`로 적는다. 마지막 응답은 마지막 텍스트 이벤트다.
+- 빠른 답변·2차 의견(`opencode run --agent plan`)은 로컬과 같다. 메인 저장소나 worktree로 `cd`한 뒤 돌린다.
 
 ## 기다리기
 
@@ -114,7 +117,7 @@ opencode run --dir <worktree> -m <provider/model> --variant <강도> --auto --fo
 | --- | --- |
 | Claude | SendMessage로 그 에이전트 ID에 보낸다 |
 | Codex | `codex exec resume <세션 ID> "<메시지>"`를 같은 옵션(`-C`는 빼고 worktree에서 실행, `-c service_tier` 다시 판단)으로 백그라운드 실행 |
-| OpenCode | `opencode run --dir <worktree> -s <세션 ID> --auto "<메시지>"` |
+| OpenCode | `cd <worktree> && opencode run --standalone -s <세션 ID> --auto "<메시지>"` |
 
 ## 정리
 
