@@ -66,16 +66,16 @@ claude.ai/code에서 개인 클라우드 환경을 하나 만든다(세션 제�
    [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\.codex-cloud\auth.json")) | Set-Clipboard
    ```
 
-   클립보드 값을 환경 변수 `CODEX_AUTH_JSON_B64`로 넣는다. 지휘를 시작할 때 `~/.codex/auth.json`으로 풀어 쓴다.
+   클립보드 값을 환경 변수 `CODEX_AUTH`로 넣는다. 지휘를 시작할 때 `~/.codex/auth.json`으로 풀어 쓴다.
    - 클라우드 세션이 토큰을 갱신하면 환경 변수의 값은 낡는다. 지휘가 "Codex 클라우드 로그인 갱신 필요"라고 알리면 위 명령을 다시 돌려 값을 바꾼다. 클라우드 지휘 세션을 동시에 여러 개 돌리면 더 빨리 낡는다.
 4. **OpenCode 로그인**(쓰는 경우): OpenCode v2는 로그인을 `auth.json` 파일에 두지 않는다. PC에서 `opencode auth list`로 OpenCode Go의 이름을 확인하고, 그 하나만 내보낸다(이름을 빼면 다른 로그인까지 모두 나온다).
 
    ```powershell
-   $j = opencode auth export <OpenCode Go 이름> | Out-String
+   $j = opencode auth export "<OpenCode Go 이름 또는 ID>" | Out-String
    [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($j)) | Set-Clipboard
    ```
 
-   클립보드 값을 환경 변수 `OPENCODE_AUTH_EXPORT_B64`로 넣는다. 지휘를 시작할 때 `opencode auth import`로 넣는다.
+   클립보드 값을 환경 변수 `OPENCODE_AUTH`로 넣는다. 지휘를 시작할 때 `opencode auth import`로 넣는다.
 
 ### 플러그인 설치
 

@@ -23,16 +23,16 @@ Claude Code 클라우드 세션(`CLAUDE_CODE_REMOTE=true`)에서 지휘할 때 �
    git fetch --depth=1000 origin
    ```
 2. **도구 확인**: `codex --version`, `opencode --version`. 없는 도구는 그 계열을 등급 목록에서 건너뛴다고 사용자에게 한 줄로 알린다. 설치는 클라우드 환경의 Setup script가 맡는다(README "클라우드에서 쓰기").
-3. **로그인 복원**: 환경 변수 `CODEX_AUTH_JSON_B64`, `OPENCODE_AUTH_EXPORT_B64`가 있고 이 세션에서 아직 복원하지 않았을 때만 복원한다. 이미 복원했으면(쉬었다 다시 연 세션) 다시 하지 않는다. 세션 안에서 갱신된 최신 토큰을 낡은 값으로 덮어쓰지 않기 위해서다. 값은 출력하지 않는다.
+3. **로그인 복원**: 환경 변수 `CODEX_AUTH`, `OPENCODE_AUTH`가 있고 이 세션에서 아직 복원하지 않았을 때만 복원한다. 이미 복원했으면(쉬었다 다시 연 세션) 다시 하지 않는다. 세션 안에서 갱신된 최신 토큰을 낡은 값으로 덮어쓰지 않기 위해서다. 값은 출력하지 않는다.
 
    ```bash
    f="${CODEX_HOME:-$HOME/.codex}/auth.json"
-   [ -n "${CODEX_AUTH_JSON_B64:-}" ] && [ ! -s "$f" ] && mkdir -p "$(dirname "$f")" \
-     && printf '%s' "$CODEX_AUTH_JSON_B64" | base64 -d > "$f" && chmod 600 "$f"
+   [ -n "${CODEX_AUTH:-}" ] && [ ! -s "$f" ] && mkdir -p "$(dirname "$f")" \
+     && printf '%s' "$CODEX_AUTH" | base64 -d > "$f" && chmod 600 "$f"
    # OpenCode v2는 로그인을 파일이 아니라 자체 저장소에 둔다. `auth export`로 뽑은 JSON을 `auth import`로 넣는다.
    m="$HOME/.local/state/agent-orchestra/opencode-imported"
-   [ -n "${OPENCODE_AUTH_EXPORT_B64:-}" ] && [ ! -f "$m" ] \
-     && printf '%s' "$OPENCODE_AUTH_EXPORT_B64" | base64 -d | opencode auth import \
+   [ -n "${OPENCODE_AUTH:-}" ] && [ ! -f "$m" ] \
+     && printf '%s' "$OPENCODE_AUTH" | base64 -d | opencode auth import \
      && mkdir -p "$(dirname "$m")" && touch "$m"
    ```
    복원한 뒤 `opencode auth list`에 OpenCode Go가 보이는지 확인한다. 안 보이면 OpenCode를 등급 목록에서 건너뛴다고 알린다.
