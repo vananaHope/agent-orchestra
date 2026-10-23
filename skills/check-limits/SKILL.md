@@ -12,8 +12,9 @@ description: Codex·Claude 사용 한도를 실제 사용률(창별 %·초기화
 이 스킬 폴더(`Base directory for this skill`)의 `scripts/`에 있는 스크립트를 쓴다. 기본은 둘 다 잰다. 사용자가 하나만 물었으면 그것만 잰다.
 
 - **Codex**: `python -I <스킬 폴더>/scripts/codex_limit.py --json`
-  - 짧은 `codex exec`를 한 번 돌리고, 그 실행이 남긴 세션 기록(`$CODEX_HOME/sessions/`, 없으면 `~/.codex/sessions/`)의 `rate_limits`를 읽는다. 창은 `primary`와 `secondary`이고 길이는 `window_minutes`로 본다(요금제에 따라 창이 하나뿐이거나 `primary`가 7일 창일 수 있다). 창마다 `elapsed_percent`(창이 지난 비율)도 낸다.
-  - Codex를 실제로 한 번 호출하므로 사용량이 조금 들고 수십 초가 걸린다. 30분 안에 잰 결과가 이번 대화에 있으면 그것을 쓰고, 측정 시각을 함께 적는다.
+  - Codex 로그인 정보(`$CODEX_HOME/auth.json`, 없으면 `~/.codex/auth.json`)로 Codex의 `/status`가 쓰는 사용량 API를 읽는다. 사용량이 들지 않고 1초 안에 끝나므로 필요할 때마다 다시 잰다. 결과의 `source`가 `usage-api`다.
+  - API가 실패하면(로그인 만료, 응답 형식 변경 등) 짧은 `codex exec`를 한 번 돌리고, 그 실행이 남긴 세션 기록(`$CODEX_HOME/sessions/`)의 `rate_limits`를 읽는다. `source`가 `exec`이고 실패 이유가 `api_error`에 있다. 이 경로는 사용량이 조금 들고 수십 초가 걸린다. 이때는 30분 안에 잰 결과가 이번 대화에 있으면 그것을 쓰고, 측정 시각을 함께 적는다. `--exec`로 이 경로를 바로 쓸 수 있다.
+  - 창은 `primary`와 `secondary`이고 길이는 `window_minutes`로 본다(요금제에 따라 창이 하나뿐이거나 `primary`가 7일 창일 수 있다). 창마다 `elapsed_percent`(창이 지난 비율)도 낸다.
 - **Claude**: `python -I <스킬 폴더>/scripts/claude_limit.py --json`
   - claude-hud가 Claude Code 상태 표시줄 입력의 `rate_limits`를 `~/.claude/claude-usage.json`에 30초마다 내보낸다(`~/.claude/plugins/claude-hud/config.json`의 `display.externalUsageWritePath`. claude-hud 0.11 이상, 값은 절대경로여야 하며 `~`로 쓰면 파일이 생기지 않는다). 창은 `five_hour`와 `seven_day`다.
   - 파일을 읽기만 하므로 비용이 없다. 필요할 때마다 다시 잰다.
@@ -31,7 +32,7 @@ description: Codex·Claude 사용 한도를 실제 사용률(창별 %·초기화
 
 `unknown`이면 추측하지 않는다. 원인을 함께 알린다.
 - Claude: 스냅숏 파일이 없거나 10분 넘게 갱신되지 않았다. claude-hud 설치(0.11 이상, 상태 표시줄이 `/claude-hud:setup`의 런처로 최신 버전을 실행하는지)와 `externalUsageWritePath`가 절대경로인지 확인하라고 안내한다.
-- Codex: `codex` 명령 실패, 로그인 만료, 세션 기록에 `rate_limits` 없음. 스크립트가 낸 `error` 끝부분을 보여 준다.
+- Codex: 사용량 API와 `codex exec`가 둘 다 실패했다(로그인 만료, 세션 기록에 `rate_limits` 없음 등). 스크립트가 낸 `api_error`와 `error` 끝부분을 보여 준다.
 
 ## 보고
 
