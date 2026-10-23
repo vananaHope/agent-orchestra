@@ -33,5 +33,3 @@ Orca `worker-start`에는 Codex 설정을 넘길 옵션이 없다. Codex는 작�
 3. 이 파일이 커밋되지 않게 메인 저장소의 `.git/info/exclude`에 `/.codex/`를 더한다(worktree가 함께 쓰는 파일이라 한 번이면 된다).
 4. [tiers.md](tiers.md)의 "띄우기"대로 띄운다.
 5. 작업자가 처음 응답하면 `$CODEX_HOME/sessions/`에서 `cwd`가 그 worktree인 가장 새 세션 기록의 `"service_tier"`를 본다. 켰으면 `priority`, 껐으면 `default`여야 한다. 다르면 신뢰 설정을 확인하고 사용자에게 알린다.
-
-**클라우드 세션**에서는 1~3을 하지 않는다. `codex exec`에 `-c service_tier="fast"` 또는 `-c service_tier="default"`를 직접 넘긴다([runner-cloud.md](runner-cloud.md) "Codex"). 판단 기준과 기록, 5의 확인은 같다.

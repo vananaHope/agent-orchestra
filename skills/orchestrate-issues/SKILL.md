@@ -1,6 +1,6 @@
 ---
 name: orchestrate-issues
-description: 이슈(GitHub·로컬 md·아티팩트)를 Orca(클라우드 세션에서는 git worktree와 백그라운드 작업자) 위에서 "등급별 작업자(OpenCode·Codex·Claude) 구현 → 다른 계열 교차 검토 → PR·병합" 흐름으로 지휘한다. 이슈 구현·다음 이슈 진행·다음 묶음(wave) 진행, 지시 대기 작업의 PR 올리기·병합·리뷰 반영을 요청받았을 때 사용.
+description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급별 작업자(OpenCode·Codex·Claude) 구현 → 다른 계열 교차 검토 → PR·병합" 흐름으로 지휘한다. 이슈 구현·다음 이슈 진행·다음 묶음(wave) 진행, 지시 대기 작업의 PR 올리기·병합·리뷰 반영을 요청받았을 때 사용.
 ---
 
 # 이슈 지휘
@@ -24,7 +24,6 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca(클라우드 세션
 - **실창 잠금**: 프로젝트 설정에 "실창 검사" 절이 있으면 `python -I <스킬 폴더>/scripts/desktop_lock.py install`로 잠금 스크립트를 고정 경로에 둔다([desktop.md](desktop.md) "고정 경로").
 - **기본 브랜치**: 이 문서와 양식의 `main`은 프로젝트 설정 "병합" 절의 기본 브랜치다(없으면 `main`).
 - **Orca 명령**의 정확한 사용법은 이 문서에 없다. Orca 명령을 처음 쓰기 전에 `orchestration` 스킬을 불러 그 안내대로 `orca skills get orchestration`을 읽는다(버전에 맞는 안내가 그쪽에 있다).
-- **클라우드 세션**: 환경 변수 `CLAUDE_CODE_REMOTE`가 `true`면 Claude Code 클라우드 세션이다. Orca가 없으므로 [runner-cloud.md](runner-cloud.md)를 먼저 읽고 그 "시작할 때"를 한다. 이 문서와 다른 문서의 Orca 명령(Run, `worker-start`, `worker-read`, `check`, `reply`, `worker-retain`, `worker-release`, `orca worktree`, `--terminal`)과 `gh issue`·`gh pr` 명령은 그 문서의 대응표대로 바꿔 읽는다. 단계와 규칙은 그대로다.
 
 ## 배치
 

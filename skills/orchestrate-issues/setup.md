@@ -181,11 +181,5 @@ Settings for the `orchestrate-issues` skill (agent-orchestra plugin). See `docs/
 - `orca`, `codex`, `opencode` 명령이 있다.
 - `check-limits` 스킬로 잰 Codex와 Claude가 둘 다 `unknown`이 아니다. `unknown`이면 그 스킬이 알려 주는 원인을 사용자에게 전한다.
 
-**클라우드 세션**(`CLAUDE_CODE_REMOTE`가 `true`)에서는 다르게 본다.
-
-- `gh auth status` 대신 `gh api repos/<owner>/<repo> --jq .full_name`이 되는지 본다. 이 문서의 `gh issue`·`gh label`·`gh repo view`도 [runner-cloud.md](runner-cloud.md) "GitHub" 표의 REST 명령으로 바꿔 쓴다.
-- `orca`는 보지 않는다. `codex`, `opencode`만 본다.
-- Codex만 `unknown`이 아니면 된다. Claude는 재지 않는다([limits.md](limits.md) "클라우드 세션").
-
 
 **완료 기준**: 설정과 `common-findings.md`가 고른 위치에 있고, 사용자가 마지막 창에서 "저장"을 골랐고, 전제 확인 결과를 알렸다. 저장소 파일을 바꿨다면 커밋은 사용자가 원할 때 한다.
