@@ -74,18 +74,15 @@ claude.ai/code에서 개인 클라우드 환경을 하나 만든다(세션 제�
 
 ### 플러그인 설치
 
-클라우드 세션은 PC에 설치한 플러그인을 쓰지 못한다. 지휘할 프로젝트 저장소의 `.claude/settings.json`에 넣고 커밋한다.
+클라우드 세션은 PC에 설치한 플러그인을 쓰지 못하고, 저장소 `.claude/settings.json`의 `enabledPlugins`·`extraKnownMarketplaces`도 설치하지 않는다(공식 문서 "What carries over from your setup"). 클라우드 환경의 Setup script에서 CLI로 설치한다. 결과는 환경 캐시에 들어가므로 세션마다 다시 받지 않는다.
 
-```json
-{
-  "extraKnownMarketplaces": {
-    "agent-orchestra": { "source": { "source": "github", "repo": "vananaHope/agent-orchestra" } }
-  },
-  "enabledPlugins": { "agent-orchestra@agent-orchestra": true }
-}
+```bash
+claude plugin marketplace add vananaHope/agent-orchestra
+claude plugin install agent-orchestra@agent-orchestra
 ```
 
-이 저장소는 비공개이므로 세션을 열 때 이 저장소도 함께 고르는 등 세션이 읽을 수 있어야 한다.
+- 캐시는 Setup script나 허용 도메인을 바꿀 때, 그리고 약 7일마다 다시 만들어진다. 그때 최신 버전을 받는다. 바로 받고 싶으면 Setup script에 주석 한 줄을 바꿔 캐시를 다시 만들게 한다.
+- 이 저장소는 비공개다. Setup script는 Claude Code가 GitHub 프록시에 붙기 전에 돌기 때문에 위 명령이 인증 없이 실패할 수 있다(확인 안 함). 실패하면 이 저장소의 `skills/`를 지휘할 프로젝트의 `.claude/skills/`에 복사해 커밋하는 방법을 쓴다.
 
 ## 구성
 
