@@ -42,6 +42,51 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 설정이 없던 기존 프로젝트는 GitHub 이슈의 `ready-for-agent` 라벨, GitHub 이슈 의존 관계, 본문 체크리스트, `자동` 병합(`merge`)을 기본값으로 쓴다. 작업 파일은 각 저장소의 `.local/orchestration/`에 쌓인다.
 
+## 클라우드에서 쓰기
+
+Claude Code 클라우드 세션(claude.ai/code, 모바일 앱)에서는 Orca 없이 돈다. 세션이 `CLAUDE_CODE_REMOTE=true`면 지휘 스킬이 `runner-cloud.md`를 읽어 worktree는 `git worktree`로, Claude 작업자는 서브에이전트로, Codex·OpenCode는 `codex exec`·`opencode run`으로 띄운다. 등급별 배치, 교차 검토, 병합 규칙은 같다.
+
+로컬과 다른 점:
+
+- Claude 한도는 재지 않는다(상태 표시줄이 없어 claude-hud를 못 씀). 서브에이전트가 한도 에러로 끝나면 Claude 절약 모드로 간다.
+- GitHub GraphQL이 막혀 있어 `gh issue`·`gh pr`은 `gh api` REST로 바꿔 쓴다.
+- 실창 검사는 하지 않고 사람이 확인할 항목으로 넘긴다.
+
+### 클라우드 환경 설정
+
+claude.ai/code에서 개인 클라우드 환경을 하나 만든다(세션 제목 줄의 환경 메뉴 → 추가). 환경 변수는 그 환경을 쓰는 사람이 모두 볼 수 있으니 공유 환경에 넣지 않는다.
+
+1. **Network access**: Custom으로 두고 기본 목록을 포함한 채 Allowed domains에 더한다. `chatgpt.com`, `auth.openai.com`, `api.openai.com`(Codex), `opencode.ai`, `models.dev`(OpenCode). 쓰는 OpenCode 모델 제공자의 호스트도 더한다. 막히면 에러에 나온 호스트를 더한다.
+2. **Setup script**: `npm install -g @openai/codex opencode-ai`. 결과가 캐시되므로 세션마다 다시 설치하지 않는다.
+3. **Codex 구독 로그인**: PC에서 클라우드 전용 로그인을 따로 만든다. 평소 `~/.codex` 로그인은 건드리지 않는다. 갱신 토큰이 한 번 쓰면 바뀌므로 PC의 `auth.json`을 그대로 복사하면 PC 쪽이 로그아웃될 수 있다.
+
+   ```powershell
+   # PowerShell
+   mkdir "$env:USERPROFILE\.codex-cloud" -Force
+   $env:CODEX_HOME = "$env:USERPROFILE\.codex-cloud"
+   codex login
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\.codex-cloud\auth.json")) | Set-Clipboard
+   ```
+
+   클립보드 값을 환경 변수 `CODEX_AUTH_JSON_B64`로 넣는다. 지휘를 시작할 때 `~/.codex/auth.json`으로 풀어 쓴다.
+   - 클라우드 세션이 토큰을 갱신하면 환경 변수의 값은 낡는다. 지휘가 "Codex 클라우드 로그인 갱신 필요"라고 알리면 위 명령을 다시 돌려 값을 바꾼다. 클라우드 지휘 세션을 동시에 여러 개 돌리면 더 빨리 낡는다.
+4. **OpenCode 로그인**(쓰는 경우): 같은 방식으로 PC의 `~/.local/share/opencode/auth.json`(Windows는 OpenCode 데이터 폴더의 같은 파일)을 base64로 `OPENCODE_AUTH_JSON_B64`에 넣는다.
+
+### 플러그인 설치
+
+클라우드 세션은 PC에 설치한 플러그인을 쓰지 못한다. 지휘할 프로젝트 저장소의 `.claude/settings.json`에 넣고 커밋한다.
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "agent-orchestra": { "source": { "source": "github", "repo": "vananaHope/agent-orchestra" } }
+  },
+  "enabledPlugins": { "agent-orchestra@agent-orchestra": true }
+}
+```
+
+이 저장소는 비공개이므로 세션을 열 때 이 저장소도 함께 고르는 등 세션이 읽을 수 있어야 한다.
+
 ## 구성
 
 ```
@@ -53,7 +98,8 @@ skills/configure/        설정 창으로 프로젝트 설정 만들기·고치�
 skills/orchestrate-issues/
   SKILL.md               역할, 배치, 시작 조건, 1~7단계
   trackers.md            이슈 저장소별 동작(GitHub, 로컬 md, 아티팩트)
-  limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드)
+  limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드, 클라우드)
+  runner-cloud.md        클라우드 세션 실행(Orca 대신 git worktree·서브에이전트·codex exec·opencode run, GitHub REST)
   tiers.md               등급 기준, 등급별 구현·검토 목록, 검토자 고르기, 관리자 확인, 맡김 기록
   opencode.md            OpenCode Go 조건, 모델·강도 주기, rebase
   codex-fast.md          Codex fast를 켤지 정하는 기준과 worktree에 주는 방법
