@@ -119,3 +119,7 @@ skills/orchestrate-issues/
 ## 바꾸기
 
 스킬이나 mod를 고치면 `.claude-plugin/plugin.json`의 `version`을 올리고 커밋·push한다. mod를 고쳤으면 먼저 `claude plugin validate .`와 `claude plugin test .`를 돌린다. 쓰는 쪽에서는 `/plugin marketplace update agent-orchestra`로 받는다.
+
+## 라이선스
+
+MIT. [LICENSE](LICENSE)를 본다.
