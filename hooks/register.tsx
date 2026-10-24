@@ -4,7 +4,7 @@
 // 한도는 세션이 받은 Claude 창과 check-limits의 codex_limit.py에서 온다.
 //
 // 모양은 ClaudeRipple의 터미널 표기를 따른다. 띠는 기호와 값을 두 칸 간격으로 늘어놓은 조용한 한 줄이고,
-// 평소에는 흐리게, 볼 일이 있을 때만 노랑(입력 기다림)과 빨강(멈춤)을 쓴다. 패널은 `오늘 할 일 N` 아래
+// 평소에는 흐리게, 볼 일이 있을 때만 노랑(입력 기다림)과 빨강(멈춤)을 쓴다. 패널은 `지휘 현황  진행 N · 완료 N` 아래
 // 단계마다(구현 중 … PR 열림, 오늘 끝난 것은 완료) 칸을 나눠 `● 이름  작업자 … 10/24` 한 줄씩 늘어놓는다.
 
 import { atom, read, update } from 'claude-code'
@@ -373,10 +373,10 @@ export const register: Register = (on, options) => {
 
     return (
       <Box flexDirection="column" width="100%">
-        <Text bold>오늘 할 일 <Text color={ACCENT}>{openCount + done.length}</Text></Text>
+        <Text bold>지휘 현황  <Text dimColor>진행</Text> <Text color={ACCENT}>{openCount}</Text><Text dimColor> · 완료</Text> <Text color={GOOD}>{done.length}</Text></Text>
         {sections.flatMap(({ phase, tasks }) => section(phase, isActive({ phase }) ? ACCENT : undefined, tasks.map(openRow)))}
         {done.length ? section('완료', GOOD, done.map(doneRow)) : null}
-        {!openCount && !done.length ? <Text dimColor>오늘 할 일이 없습니다</Text> : null}
+        {!openCount && !done.length ? <Text dimColor>지휘 중인 작업이 없습니다</Text> : null}
         <Text> </Text>
         {rule}
         <Text bold>한도</Text>

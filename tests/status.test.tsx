@@ -132,12 +132,12 @@ test('끝난 작업은 띠의 개수에 넣지 않는다', async ($, on) => {
   await ui.unmount()
 })
 
-test('패널은 오늘 할 일 수 아래 단계마다 칸을 나눠 작업을 날짜와 함께 보여 준다', async ($, on) => {
+test('패널은 지휘 현황(진행·완료 수) 아래 단계마다 칸을 나눠 작업을 날짜와 함께 보여 준다', async ($, on) => {
   seed(on, { isManager: true, snapshot: { ...SNAP, tasks: [...SNAP.tasks, task('issue-14', '구현 중', 'working')] } })
   const day = `${String(new Date(NOW).getMonth() + 1).padStart(2, '0')}/${String(new Date(NOW).getDate()).padStart(2, '0')}`
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect(await ui.find({ type: 'Text', text: /오늘 할 일 5/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /지휘 현황  진행 4 · 완료 1/})).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /^구현 중 2$/ })).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /^검토 중 1$/ })).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /^지시 대기 1$/ })).toBeTruthy()
