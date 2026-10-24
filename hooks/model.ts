@@ -1,6 +1,6 @@
 // 지휘 상태를 읽어 내는 순수 함수들. register.tsx가 파일과 Orca 출력을 넘기고, 테스트도 여기를 본다.
 
-import type { Activity, Limit, Task } from '../types'
+import type { Activity, FrontierIssue, FrontierStatus, Limit, Task } from '../types'
 
 /** 작업자가 붙어 있어야 하는 단계 */
 export const ACTIVE_PHASES = ['구현 중', '검토 중', '수정 중'] as const
@@ -11,12 +11,13 @@ export const DONE_PHASE = '끝'
 /** 작업자가 쉬는데 단계가 그대로면 멈춤으로 보는 시간 */
 export const PARKED_AFTER_MS = 5 * 60 * 1000
 
-/** state.md: 첫 줄이 단계, 둘째 줄이 `등급: <등급> · 작업자: <표기>`. */
-export function parseState(text: string): { phase: string; tier?: string; worker?: string } {
-  const [first = '', second = ''] = text.replace(/^﻿/, '').split(/\r?\n/)
+/** state.md: 첫 줄이 단계, 둘째 줄이 `등급: <등급> · 작업자: <표기>`, 막혔으면 그 아래 어느 줄에 `막힘: <풀릴 조건>`. */
+export function parseState(text: string): { phase: string; tier?: string; worker?: string; blocker?: string } {
+  const [first = '', second = '', ...rest] = text.replace(/^﻿/, '').split(/\r?\n/)
   const tier = /등급:\s*([^·]+?)\s*(?:·|$)/.exec(second)?.[1]
   const worker = /작업자:\s*(.+?)\s*$/.exec(second)?.[1]
-  return { phase: first.trim(), ...(tier ? { tier } : {}), ...(worker ? { worker } : {}) }
+  const blocker = [second, ...rest].map(line => /^\s*막힘:\s*(.+?)\s*$/.exec(line)?.[1]).find(Boolean)
+  return { phase: first.trim(), ...(tier ? { tier } : {}), ...(worker ? { worker } : {}), ...(blocker ? { blocker } : {}) }
 }
 
 /** worker-list의 한 줄 중 여기서 쓰는 부분 */
@@ -68,14 +69,14 @@ export function activityOf(worker: OrcaWorker | undefined): Activity {
   return 'unknown'
 }
 
-/** 작업 단계는 진행 중인데 작업자가 없거나 오래 쉬고 있다. */
+/** 작업 단계는 진행 중인데 작업자가 없거나 오래 쉬고 있다. 관리자가 막힘을 적어 둔 작업은 기다리는 줄 알고 있으므로 아니다. */
 export function isParked(task: Task, now: number): boolean {
-  if (!(ACTIVE_PHASES as readonly string[]).includes(task.phase)) return false
+  if (!(ACTIVE_PHASES as readonly string[]).includes(task.phase) || task.blocker) return false
   if (task.activity === 'none') return true
   return task.activity === 'idle' && now - (task.lastOutputAt ?? task.phaseSince) > PARKED_AFTER_MS
 }
 
-export type Counts = { 구현: number; 검토: number; 수정: number; waiting: number; parked: number; user: number }
+export type Counts = { 구현: number; 검토: number; 수정: number; waiting: number; parked: number; blocked: number; user: number }
 
 export function countTasks(tasks: readonly Task[], now: number): Counts {
   const count = (phase: string) => tasks.filter(task => task.phase === phase).length
@@ -83,6 +84,7 @@ export function countTasks(tasks: readonly Task[], now: number): Counts {
     구현: count('구현 중'), 검토: count('검토 중'), 수정: count('수정 중'),
     waiting: tasks.filter(task => task.activity === 'waiting').length,
     parked: tasks.filter(task => isParked(task, now)).length,
+    blocked: tasks.filter(task => task.blocker).length,
     user: tasks.filter(task => (USER_PHASES as readonly string[]).includes(task.phase)).length,
   }
 }
@@ -193,11 +195,40 @@ export function groupOf(task: Task, now: number): Group {
   return (USER_PHASES as readonly string[]).includes(task.phase) ? 'user' : 'running'
 }
 
-/** 먼저 봐야 할 것부터: 입력 기다림, 멈춤, 일하는 중, 사용자 차례, 나머지 */
+/** 먼저 봐야 할 것부터: 입력 기다림, 멈춤, 막힘, 일하는 중, 사용자 차례, 나머지 */
 export function byUrgency(tasks: readonly Task[], now: number): Task[] {
-  const rank = (task: Task) => task.activity === 'waiting' ? 0 : isParked(task, now) ? 1 :
-    task.activity === 'working' ? 2 : (USER_PHASES as readonly string[]).includes(task.phase) ? 4 : 3
+  const rank = (task: Task) => task.activity === 'waiting' ? 0 : isParked(task, now) ? 1 : task.blocker ? 2 :
+    task.activity === 'working' ? 3 : (USER_PHASES as readonly string[]).includes(task.phase) ? 5 : 4
   return [...tasks].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+}
+
+const FRONTIER_STATUSES: readonly FrontierStatus[] = ['ready', 'waiting', 'blocked']
+
+/**
+ * frontier.json(`{ "issues": [...] }` 또는 배열 그대로). 이름과 상태가 없거나 모르는 상태인 줄은 버린다.
+ * 선행 관계는 여기서 따지지 않는다: 이슈 저장소마다 규칙이 달라 관리자가 정해 적는다.
+ */
+export function parseFrontier(json: unknown): FrontierIssue[] {
+  const list = Array.isArray(json) ? json : (json as { issues?: unknown })?.issues
+  if (!Array.isArray(list)) return []
+  return list.flatMap((item: Record<string, unknown>) => {
+    const name = typeof item?.name === 'string' ? item.name.trim() : ''
+    const status = item?.status as FrontierStatus
+    if (!name || !FRONTIER_STATUSES.includes(status)) return []
+    const title = typeof item.title === 'string' && item.title.trim() ? item.title.trim() : undefined
+    const needs = Array.isArray(item.needs) ? item.needs.filter((need): need is string => typeof need === 'string' && !!need) : []
+    const blocker = typeof item.blocker === 'string' && item.blocker.trim() ? item.blocker.trim() : undefined
+    return [{ name, status, ...(title ? { title } : {}), ...(needs.length ? { needs } : {}), ...(blocker ? { blocker } : {}) }]
+  })
+}
+
+/**
+ * 패널의 맡길 이슈 칸: 이미 작업 폴더가 있는 이슈(진행 중이거나 오늘 끝난 것)는 빼고,
+ * 맡길 수 있음 → 기다림 → 막힘 순서. 같은 상태 안에서는 관리자가 적은 순서(임계 경로 순)를 지킨다.
+ */
+export function frontierRows(frontier: readonly FrontierIssue[], tasks: readonly Task[]): FrontierIssue[] {
+  const started = new Set(tasks.map(task => task.name))
+  return FRONTIER_STATUSES.flatMap(status => frontier.filter(issue => issue.status === status && !started.has(issue.name)))
 }
 
 /** 패널의 칸: 단계 순서(구현 중 → … → PR 열림), 모르는 단계는 그 뒤. 끝난 작업과 빈 칸은 뺀다. 칸 안은 급한 순서. */
