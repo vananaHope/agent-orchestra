@@ -1,9 +1,12 @@
-import type { On } from 'claude-code/testing'
+import type { TestBody } from 'claude-code/testing'
 import { expect, test } from 'claude-code/testing'
 
 import type { Snapshot, Task } from '../types'
 import { activityOf, codexLimits, countTasks, frontierRows, isParked, parseFrontier, parseState, phaseSections, workerOf } from '../hooks/model.ts'
 import type { OrcaWorker } from '../hooks/model.ts'
+
+/** 테스트 본문이 받는 `on`(엔진 자리에 훅을 거는 함수). 키트가 이 타입을 따로 내보내지 않아 본문의 형식에서 꺼낸다. */
+type On = Parameters<TestBody>[1]
 
 /** 세션이 저장해 둔 값처럼 상태를 넣는다(엔진 자리의 state.get 훅). */
 function seed(on: On, state: { isManager?: boolean; snapshot?: Snapshot }) {
