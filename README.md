@@ -59,9 +59,10 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 이 세션에서 `orchestrate-issues`가 불리면 프롬프트 위에 띠가 나온다. 다른 세션에는 나오지 않고, 그 세션에서는 읽기도 하지 않는다.
 
-```
-◆ 지휘  ◐ issue-12 입력 대기  구현 1  ◇ 지시 대기 1  │  Codex 7d 7%  Claude 5h 3% 7d 11%  p: 패널 ○ ctrl+x tab
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/orchestra-band-dark.png">
+  <img alt="지휘 상태 띠: 프롬프트 위 한 줄에 '◆ 지휘  ◐ issue-13 입력 대기  ● 일하는 중 2  구현 2 · 검토 1  ◇ 지시 대기 1  │  Codex 7d 7%  Claude 5h 83% 7d 41%  p: 패널 ●  ctrl+x tab'. 위에 부분마다 뜻을 적었다: 지휘 세션에만 나옴, 먼저 볼 것(입력 대기·멈춤·막힘, 하나면 이름), 진행(일하는 작업자 수, 단계별 작업 수), 사용자 차례(지시 대기·PR 열림 작업 수), 한도(80% 넘으면 노랑, 100%면 빨강), 패널 열고 닫기(● 열림, ctrl+x tab으로 띠에 들어가 p)." src="docs/diagrams/orchestra-band.png">
+</picture>
 
 - 작업 단계는 각 작업의 `state.md`, 작업자 활동(일하는 중·입력 기다림)은 Orca가 자기 훅으로 본 값(`orca orchestration worker-list`), 한도는 세션이 받은 Claude 창과 `check-limits`의 Codex 측정에서 온다. 10초마다 다시 읽는다(Codex 한도는 5분마다).
 - 단계는 진행 중인데 작업자가 없거나 5분 넘게 쉬면 `⏸ 멈춤`으로 표시한다. 관리자가 `state.md`에 `막힘: <풀릴 조건>`을 적은 작업은 멈춤 대신 `■ 막힘: <조건>`으로 띠와 패널에 나온다.
@@ -87,7 +88,7 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 hooks/                   지휘 상태 띠·패널 mod
   register.tsx           띠·패널 그리기, 지휘 세션 판별, 주기적 읽기
   model.ts               state.md·frontier.json·Orca 작업자·한도를 상태로 바꾸는 순수 함수
-docs/diagrams/           README의 지휘 구성·작업 단계·패널 그림(HTML 원본과 라이트·다크 PNG)
+docs/diagrams/           README의 지휘 구성·작업 단계·띠·패널 그림(HTML 원본과 라이트·다크 PNG)
 types/index.d.ts         mod가 세션에 저장하는 값의 형식
 tests/status.test.tsx    mod 테스트(`claude plugin test .`)
 skills/check-limits/     Codex·Claude 실제 사용률 측정(따로 불러도 됨)
