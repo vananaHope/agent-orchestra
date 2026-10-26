@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지휘 상태 띠</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #2d3142;
+      --color-ink:     #f5f5f5;
+      --color-muted:   #bfc0c0;
+      --color-accent:  #f08a59;
+      --font-sans:     'Geist', 'Noto Sans KR', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', 'Noto Serif KR', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+
+    svg { width: 100%; min-width: 1080px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Screen · agent-orchestra</p>
+    <h1>지휘 상태 띠</h1>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1080 304" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="orchestra-band-dark-title orchestra-band-dark-desc">
+        <title id="orchestra-band-dark-title">지휘 상태 띠</title>
+        <desc id="orchestra-band-dark-desc">프롬프트 위에 나오는 지휘 상태 띠: 지휘 표시, 먼저 볼 작업, 진행 수, 사용자 차례, 한도, 패널 열기를 한 줄에 보여 주고 위에 각 부분의 뜻을 적었다.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f08a59"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#739fdf"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#2d3142"/>
+
+        <rect x="40" y="168" width="1000" height="112" rx="8" fill="#24273a" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="56" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#b1b9f9" font-weight="600">◆ 지휘</tspan></text>
+        <text x="113.6" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#ffc107">◐ issue-13 입력 대기</tspan></text>
+        <text x="267.2" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#b1b9f9">● 일하는 중 2</tspan></text>
+        <text x="370.4" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#949eb2">구현 2 · 검토 1</tspan></text>
+        <text x="483.2" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#b1b9f9">◇ 지시 대기 1</tspan></text>
+        <text x="586.4" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#949eb2">│</tspan></text>
+        <text x="612.8" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#949eb2">Codex</tspan><tspan fill="#949eb2"> 7d 7%</tspan></text>
+        <text x="706.4" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#949eb2">Claude</tspan><tspan fill="#ffc107"> 5h 83%</tspan><tspan fill="#949eb2"> 7d 41%</tspan></text>
+        <text x="864.8" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#f5f5f5">p: 패널 ●</tspan></text>
+        <text x="936.8" y="204" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace" xml:space="preserve"><tspan fill="#949eb2">ctrl+x tab</tspan></text>
+        <rect x="56" y="220" width="968" height="40" rx="6" fill="none" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="72" y="244" fill="#f5f5f5" font-size="12" font-family="'Geist Mono', 'Noto Sans KR', 'Malgun Gothic', ui-monospace, monospace">&gt;</text>
+        <rect x="88" y="232" width="7" height="16" fill="rgba(245,245,245,0.50)"/>
+        <path d="M 56,158 V 152 H 99.2 V 158" fill="none" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <line x1="78" y1="74" x2="78" y2="152" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="40" y="48" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="start">지휘 세션에만</text>
+        <text x="40" y="66" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="start">다른 세션에는 나오지 않는다</text>
+        <path d="M 113.6,158 V 152 H 252.8 V 158" fill="none" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <line x1="183" y1="134" x2="183" y2="152" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="183" y="108" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">먼저 볼 것</text>
+        <text x="183" y="126" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">입력 대기 · 멈춤 · 막힘, 하나면 이름</text>
+        <path d="M 267.2,158 V 152 H 468.8 V 158" fill="none" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <line x1="368" y1="74" x2="368" y2="152" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="368" y="48" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">진행</text>
+        <text x="368" y="66" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">일하는 작업자 수, 단계별 작업 수</text>
+        <path d="M 483.2,158 V 152 H 572 V 158" fill="none" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <line x1="528" y1="134" x2="528" y2="152" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="528" y="108" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">사용자 차례</text>
+        <text x="528" y="126" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">지시 대기 · PR 열림 작업 수</text>
+        <path d="M 612.8,158 V 152 H 850.4 V 158" fill="none" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <line x1="732" y1="74" x2="732" y2="152" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="732" y="48" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">한도</text>
+        <text x="732" y="66" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">80% 넘으면 노랑, 100%면 빨강</text>
+        <path d="M 864.8,158 V 152 H 1008.8 V 158" fill="none" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <line x1="937" y1="134" x2="937" y2="152" stroke="rgba(245,245,245,0.30)" stroke-width="1"/>
+        <text x="1040" y="108" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="end">패널 열고 닫기</text>
+        <text x="1040" y="126" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="end">● 열림 · ctrl+x tab으로 띠에 들어가 p</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>
