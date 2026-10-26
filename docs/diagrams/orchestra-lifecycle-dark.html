@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>작업 단계</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #2d3142;
+      --color-ink:     #f5f5f5;
+      --color-muted:   #bfc0c0;
+      --color-accent:  #f08a59;
+      --font-sans:     'Geist', 'Noto Sans KR', system-ui, sans-serif;
+      --font-serif:    'Instrument Serif', 'Noto Serif', 'Noto Serif KR', serif;
+      --font-mono:     'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 1.5rem;
+    }
+
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">State machine · agent-orchestra</p>
+    <h1>작업 단계</h1>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 488" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="orchestra-lifecycle-dark-title orchestra-lifecycle-dark-desc">
+        <title id="orchestra-lifecycle-dark-title">작업 단계</title>
+        <desc id="orchestra-lifecycle-dark-desc">작업 하나가 state.md에서 구현 중, 검토 중, 수정 중을 거쳐 지시 병합이면 지시 대기와 PR 열림을, 자동 병합이면 곧바로 끝으로 가고, 끝나면 1단계로 돌아가 빈 자리를 채우는 흐름.</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bfc0c0"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#f08a59"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#739fdf"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#2d3142"/>
+
+        <rect x="512" y="96" width="376" height="104" rx="8" fill="rgba(245,245,245,0.02)" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+        <rect x="652" y="88" width="96" height="16" rx="2" fill="#2d3142"/>
+        <text x="700" y="100" fill="#949eb2" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">지시 병합일 때</text>
+        <path d="M 46,152 H 112" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 248,152 H 320" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 456,152 H 528" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 664,152 H 736" fill="none" stroke="#739fdf" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <path d="M 804,184 V 280" fill="none" stroke="#739fdf" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <path d="M 364,184 V 280" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 412,280 V 184" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 388,120 V 72 Q 388,64 396,64 H 896 Q 904,64 904,72 V 304 Q 904,312 896,312 H 872" fill="none" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 804,344 V 384 Q 804,392 796,392 H 48 Q 40,392 40,384 V 160" fill="none" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <rect x="60" y="128" width="32" height="16" rx="2" fill="#2d3142"/>
+        <text x="76" y="140" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">맡김</text>
+        <rect x="268" y="128" width="32" height="16" rx="2" fill="#2d3142"/>
+        <text x="284" y="140" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">완료</text>
+        <rect x="464" y="128" width="32" height="16" rx="2" fill="#2d3142"/>
+        <text x="480" y="140" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">통과</text>
+        <rect x="672" y="128" width="56" height="16" rx="2" fill="#2d3142"/>
+        <text x="700" y="140" fill="#739fdf" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">PR 올려</text>
+        <rect x="814" y="224" width="44" height="16" rx="2" fill="#2d3142"/>
+        <text x="836" y="236" fill="#739fdf" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">병합해</text>
+        <rect x="292" y="224" width="64" height="16" rx="2" fill="#2d3142"/>
+        <text x="324" y="236" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">수정 필요</text>
+        <rect x="422" y="224" width="44" height="16" rx="2" fill="#2d3142"/>
+        <text x="444" y="236" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">재검토</text>
+        <rect x="588" y="40" width="112" height="16" rx="2" fill="#2d3142"/>
+        <text x="644" y="52" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">통과 · 자동 병합</text>
+        <rect x="524" y="368" width="160" height="16" rx="2" fill="#2d3142"/>
+        <text x="604" y="380" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">1단계로 · 빈 자리 채우기</text>
+        <circle cx="40" cy="152" r="6" fill="#f5f5f5"/>
+        <rect x="112" y="120" width="136" height="64" rx="8" fill="#2d3142"/>
+        <rect x="112" y="120" width="136" height="64" rx="8" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <text x="180" y="148" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">구현 중</text>
+        <text x="180" y="168" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">2단계 · 작업자</text>
+        <rect x="320" y="120" width="136" height="64" rx="8" fill="#2d3142"/>
+        <rect x="320" y="120" width="136" height="64" rx="8" fill="rgba(240,138,89,0.10)" stroke="#f08a59" stroke-width="1"/>
+        <text x="388" y="148" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">검토 중</text>
+        <text x="388" y="168" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">4단계 · 다른 계열</text>
+        <rect x="528" y="120" width="136" height="64" rx="8" fill="#2d3142"/>
+        <rect x="528" y="120" width="136" height="64" rx="8" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <text x="596" y="148" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">지시 대기</text>
+        <text x="596" y="168" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">6단계 · 사용자 차례</text>
+        <rect x="736" y="120" width="136" height="64" rx="8" fill="#2d3142"/>
+        <rect x="736" y="120" width="136" height="64" rx="8" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <text x="804" y="148" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">PR 열림</text>
+        <text x="804" y="168" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">6단계 · 병합 대기</text>
+        <rect x="320" y="280" width="136" height="64" rx="8" fill="#2d3142"/>
+        <rect x="320" y="280" width="136" height="64" rx="8" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <text x="388" y="308" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">수정 중</text>
+        <text x="388" y="328" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">5단계 · 지적 수정</text>
+        <rect x="736" y="280" width="136" height="64" rx="8" fill="#2d3142"/>
+        <rect x="736" y="280" width="136" height="64" rx="8" fill="rgba(245,245,245,0.05)" stroke="#bfc0c0" stroke-width="1"/>
+        <text x="804" y="308" fill="#f5f5f5" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">끝</text>
+        <text x="804" y="328" fill="#bfc0c0" font-size="12" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" text-anchor="middle">병합 · worktree 정리</text>
+        <line x1="40" y1="424" x2="920" y2="424" stroke="rgba(245,245,245,0.10)" stroke-width="0.8"/>
+        <text x="40" y="440" fill="#bfc0c0" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" letter-spacing="0.18em">LEGEND</text>
+        <circle cx="46" cy="457" r="5" fill="#f5f5f5"/>
+        <text x="58" y="462" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">맡길 이슈</text>
+        <rect x="144" y="452" width="14" height="10" rx="2" fill="#393e53" stroke="#f5f5f5" stroke-width="1"/>
+        <text x="164" y="462" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">state.md 단계</text>
+        <rect x="284" y="452" width="14" height="10" rx="2" fill="rgba(240,138,89,0.10)" stroke="#f08a59" stroke-width="1"/>
+        <text x="304" y="462" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">교차 검토</text>
+        <line x1="388" y1="457" x2="416" y2="457" stroke="#bfc0c0" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <text x="424" y="462" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">관리자가 넘김</text>
+        <line x1="532" y1="457" x2="560" y2="457" stroke="#739fdf" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <text x="568" y="462" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">사용자 지시</text>
+        <line x1="664" y1="457" x2="692" y2="457" stroke="#bfc0c0" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <text x="700" y="462" fill="#bfc0c0" font-size="12" font-weight="500" font-family="'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">다음 이슈로</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

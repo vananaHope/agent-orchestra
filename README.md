@@ -8,6 +8,22 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 - 이슈 의존 관계에서 임계 경로 순서로 고르고, 교차 검토를 통과하면 병합하고 worktree를 정리한다.
 - 지휘 세션의 프롬프트 위에 지휘 상태 띠를, 옆에 작업별 패널을 보여 준다(작업 단계, 작업자 활동, 한도).
 
+## 지휘 구성
+
+관리자(`orchestrate-issues`를 부른 Claude Code 세션)는 코드를 쓰지 않는다. 한도와 이슈 저장소를 보고 일을 골라 Orca로 작업자를 띄우고, 진행 상태를 작업 파일에 남긴다. 띠와 패널은 그 파일을 읽어 보여 줄 뿐이다.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/orchestra-architecture-dark.png">
+  <img alt="지휘 구성: 사용자가 관리자에게 요청하고, 관리자는 한도 측정과 이슈 저장소를 보고 Orca로 구현 작업자와 다른 계열 검토자를 같은 worktree에 띄운다. 관리자가 쓴 작업 파일을 지휘 현황 띠·패널이 10초마다 읽어 사용자에게 보여 준다." src="docs/diagrams/orchestra-architecture.png">
+</picture>
+
+작업 하나는 `state.md`의 단계를 따라 움직인다. 검토에서 지적이 나오면 수정과 재검토를 되풀이하고, 병합 방식이 `지시`면 사용자의 "PR 올려"·"병합해"를 기다린다. 끝나면 곧바로 1단계로 돌아가 빈 자리를 채운다.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/orchestra-lifecycle-dark.png">
+  <img alt="작업 단계: 맡김 → 구현 중 → 검토 중. 검토 중에서 수정 필요면 수정 중을 거쳐 재검토하고, 통과하면 지시 병합일 때 지시 대기 → PR 올려 → PR 열림 → 병합해 → 끝, 자동 병합일 때 바로 끝. 끝나면 1단계로 돌아가 빈 자리를 채운다." src="docs/diagrams/orchestra-lifecycle.png">
+</picture>
+
 ## 설치
 
 ```
@@ -93,6 +109,7 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 hooks/                   지휘 상태 띠·패널 mod
   register.tsx           띠·패널 그리기, 지휘 세션 판별, 주기적 읽기
   model.ts               state.md·frontier.json·Orca 작업자·한도를 상태로 바꾸는 순수 함수
+docs/diagrams/           README의 지휘 구성·작업 단계 그림(HTML 원본과 라이트·다크 PNG)
 types/index.d.ts         mod가 세션에 저장하는 값의 형식
 tests/status.test.tsx    mod 테스트(`claude plugin test .`)
 skills/check-limits/     Codex·Claude 실제 사용률 측정(따로 불러도 됨)
