@@ -70,33 +70,11 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 - 지시 버튼: `지시 대기` 줄의 `PR 올려`, `PR 열림` 줄의 `병합해`(5초 안에 한 번 더 눌러야 보냄), 맡길 이슈 `●` 줄의 `맡기기`. 누르면 `issue-9 PR 올려`처럼 사용자가 칠 말을 지휘 세션에 그대로 보낸다. 지휘 세션이 일하는 중이면 그 턴이 끝난 뒤 들어간다. 보낸 버튼은 지휘 세션이 처리해 그 작업의 단계(맡길 이슈면 목록)가 바뀔 때까지 `보냄`으로 남는다. 10분이 지나도 그대로면 다시 누를 수 있다.
 - 맡길 이슈: 관리자가 1단계마다 `.local/orchestration/frontier.json`에 쓰는 목록이다. `●` 바로 맡길 수 있음, `○` 선행 이슈 기다림(`← issue-21`), `■` 막힘(풀릴 조건)으로 보여 주고, 제목 옆에 목록을 쓴 지 얼마나 됐는지 적는다. 작업 폴더가 생긴 이슈는 진행 칸에 나오므로 여기서는 뺀다.
 
-```
-지휘 현황  진행 5 · 완료 2
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/orchestra-panel-dark.png">
+  <img alt="지휘 현황 패널: 맨 위 '지휘 현황 진행 5 · 완료 2'. 구현 중 칸에 ◐ issue-13 claude 입력 기다림, ● issue-12 codex@high, ■ issue-14 막힘: API 키(각각 날짜와 1~3: 열기). 검토 중 칸에 ● issue-11 opencode 4: 열기. 지시 대기 칸에 ◇ issue-9 PR 올려 버튼. 맡길 이슈 칸(2분 전 기준)에 ● issue-21 로그인 화면 맡기기, ○ issue-22 ← issue-21, ■ issue-23 막힘: 계약 확정. 완료 칸에 ✓ issue-8, issue-7 d: 펼치기. 아래에 Codex·Claude 한도 막대(80%를 넘으면 노랑)와 r: 새로 고침, p: 닫기." src="docs/diagrams/orchestra-panel.png" width="720">
+</picture>
 
-구현 중 3
-──────────────────────────────
-◐ issue-13  claude  입력 기다림  10/24  1: 열기
-● issue-12  codex@high           10/24  2: 열기
-■ issue-14  codex@high  막힘: API 키 발급  10/24  3: 열기
-
-검토 중 1
-──────────────────────────────
-● issue-11  opencode             10/24  4: 열기
-
-지시 대기 1
-──────────────────────────────
-◇ issue-9                 10/23  PR 올려
-
-맡길 이슈 3  2분 전 기준
-──────────────────────────────
-● issue-21  로그인 화면            맡기기
-○ issue-22  프로필  ← issue-21
-■ issue-23  결제  막힘: 결제사 계약 확정
-
-완료 2
-──────────────────────────────
-✓ issue-8, issue-7              d: 펼치기
-```
 - 띠 끄기·켜기: `/orchestra-status off`, `/orchestra-status on`. 플러그인 설정의 `statusBand`(띠 사용), `pollSeconds`(갱신 주기)로도 정한다.
 - Claude Code의 mod(함수 훅)를 쓴다. mod를 지원하는 Claude Code(2.1.287 이상)가 필요하다.
 
@@ -109,7 +87,7 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 hooks/                   지휘 상태 띠·패널 mod
   register.tsx           띠·패널 그리기, 지휘 세션 판별, 주기적 읽기
   model.ts               state.md·frontier.json·Orca 작업자·한도를 상태로 바꾸는 순수 함수
-docs/diagrams/           README의 지휘 구성·작업 단계 그림(HTML 원본과 라이트·다크 PNG)
+docs/diagrams/           README의 지휘 구성·작업 단계·패널 그림(HTML 원본과 라이트·다크 PNG)
 types/index.d.ts         mod가 세션에 저장하는 값의 형식
 tests/status.test.tsx    mod 테스트(`claude plugin test .`)
 skills/check-limits/     Codex·Claude 실제 사용률 측정(따로 불러도 됨)
