@@ -9,7 +9,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
 
 ## 가장 먼저: 설정 확인
 
-이 스킬이 불리면 다른 어떤 일(한도 측정, 이슈 조회, Orca 명령)보다 먼저 프로젝트 설정을 찾는다. 메인 저장소의 `docs/agents/orchestration.md`, 없으면 `.local/orchestration/settings.md`다. 이 문서에서 "프로젝트 설정의 ○○"는 그 파일의 해당 절이다.
+이 스킬이 불리면 다른 어떤 일(한도 측정, 이슈 조회, 작업자 띄우기)보다 먼저 프로젝트 설정을 찾는다. 메인 저장소의 `docs/agents/orchestration.md`, 없으면 `.local/orchestration/settings.md`다. 이 문서에서 "프로젝트 설정의 ○○"는 그 파일의 해당 절이다.
 
 - **둘 다 없으면(첫 실행)**: 사용자에게 "이 프로젝트는 지휘 설정이 없어 설정부터 합니다"라고 한 줄 알리고, 곧바로 [setup.md](setup.md)의 설정 창을 띄운다. 사용자가 원래 요청한 일(이슈 구현 등)은 설정을 저장한 뒤에 이어 간다.
 - **사용자가 설정 창을 닫거나 저장하지 않으면** 지휘를 시작하지 않고, 나중에 `/agent-orchestra:configure`로 설정할 수 있다고 알린다.
@@ -23,7 +23,23 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
 - **스킬 폴더**: 이 스킬이 불릴 때 받은 기본 디렉터리(`Base directory for this skill`)다. 플러그인 버전이 바뀌면 경로도 바뀌므로, 명세에는 매번 지금 경로를 절대 경로로 쓴다.
 - **실창 잠금**: 프로젝트 설정에 "실창 검사" 절이 있으면 `python -I <스킬 폴더>/scripts/desktop_lock.py install`로 잠금 스크립트를 고정 경로에 둔다([desktop.md](desktop.md) "고정 경로").
 - **기본 브랜치**: 이 문서와 양식의 `main`은 프로젝트 설정 "병합" 절의 기본 브랜치다(없으면 `main`).
-- **Orca 명령**의 정확한 사용법은 이 문서에 없다. Orca 명령을 처음 쓰기 전에 `orchestration` 스킬을 불러 그 안내대로 `orca skills get orchestration`을 읽는다(버전에 맞는 안내가 그쪽에 있다).
+- **실행 환경**: 작업자를 띄우고 기다리고 정리하는 명령은 이 문서에 없다. 아래 동작마다 실행 환경 문서([backends/orca.md](backends/orca.md))의 같은 이름 절을 따른다. 이 문서에서 **굵게** 쓴 동작 이름(**띄우기**, **기다리기** 등)이 그 절이다.
+
+## 실행 환경
+
+| 동작 | 하는 일 |
+| --- | --- |
+| 준비 | 지휘 세션을 시작할 때 한 번 한다. |
+| worktree 만들기 | `main`에서 `<작업 이름>-<slug>` 브랜치로 작업 전용 worktree를 만든다. |
+| 띄우기 | 에이전트·모델·강도(Codex면 fast)를 정해 명세로 작업자를 시작한다. 새 worktree, 기존 worktree, 남겨 둔 작업자 중 하나에. |
+| 제출 확인 | 명세가 작업자에게 실제로 들어가 작업이 시작됐는지 본다. |
+| 기다리기 | 작업자의 완료 보고, 질문, 막힘을 기다린다. |
+| 답하기 | 작업자의 질문에 답한다. |
+| 보내기 | 남겨 둔 작업자에게 다음 지시를 보낸다. |
+| 남겨 두기 | 끝난 작업자를 닫지 않고 재사용할 수 있게 둔다. |
+| 정리 | 다 쓴 작업자를 닫는다. |
+| worktree 지우기 | 병합한 worktree와 그 로컬 브랜치를 지운다. |
+| 작업자가 보고하는 방법 | 명세 양식의 `{실행 환경: 완료 보고}`, `{실행 환경: 질문}`에 넣을 문장. |
 
 ## 배치
 
@@ -70,7 +86,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
 
 **맡길 이슈**이고, 선행 이슈가 모두 끝났고, 지금 진행 중이 아닌 이슈가 프런티어다. 무엇이 맡길 이슈이고 선행 관계를 어디서 읽는지는 [trackers.md](trackers.md)를 따른다.
 
-**진행 중**은 셋 중 하나라도 맞는 것이다: Run에 그 작업의 작업자가 있다, `state.md`가 있고 `끝`이 아니다, 그 이슈를 가리키는 열린 PR이 있다(`gh pr list --state open --search "<이슈 표시>"`, 또는 브랜치가 `<작업 이름>-`로 시작). 지휘를 처음 시작할 때는 `.local/orchestration/*/state.md`를 먼저 훑어 이어 갈 작업을 사용자에게 알린다.
+**진행 중**은 셋 중 하나라도 맞는 것이다: 그 작업의 작업자가 떠 있다, `state.md`가 있고 `끝`이 아니다, 그 이슈를 가리키는 열린 PR이 있다(`gh pr list --state open --search "<이슈 표시>"`, 또는 브랜치가 `<작업 이름>-`로 시작). 지휘를 처음 시작할 때는 `.local/orchestration/*/state.md`를 먼저 훑어 이어 갈 작업을 사용자에게 알린다.
 
 시작 조건을 만족하는 동안 **임계 경로**에 있는 것부터 하나씩 고른다. 뒤에 이어지는 이슈 사슬이 가장 긴 이슈가 먼저이고, 같으면 번호(작업 이름)가 앞선 것이 먼저다.
 
@@ -108,33 +124,26 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
    - 작업자가 이슈를 직접 읽을 수 없는 저장소면 이슈 본문을 명세에 옮긴다. 완료 기준이 없으면 뽑아 적는다([trackers.md](trackers.md) 공통).
    - `standard`·`hard`·UI 구현이면 맡기기 전에 [spec-check.md](spec-check.md)대로 맥락 없는 에이전트에게 명세만 보여 주고, 물을 것을 받아 명세에 반영한다(등급은 3에서 정하지만 이 점검 전에 먼저 정해 둔다).
    - 맡기기 직전에 `state.md`를 `구현 중`으로 쓰고, 이슈를 진행 중으로 표시한다(저장소가 지원하면).
-2. Run이 없으면 만든다(이번 지휘 세션 전체에 Run 하나).
-3. 등급을 정하고 목록에서 작업자를 고른 뒤([tiers.md](tiers.md)), `state.md` 둘째 줄에 `등급: <등급> · 작업자: <표기>`를 적고 맡김 기록에 한 줄을 더한다. 그다음 `worker-start --spec "<명세>" --worktree new-top-level --name <작업 이름>-<slug> --base-branch main --agent <에이전트>`로 시작한다. 모델·강도·Codex fast를 줄 때는 [tiers.md](tiers.md)의 "띄우기"를 따른다(OpenCode와 Codex는 worktree를 먼저 만든다).
-4. **입력이 실제로 제출됐는지 확인한다.** `orca orchestration worker-read --dispatch <id> --source terminal --json`으로 작업자 화면을 읽는다. `draft`에 `[Pasted Content ...]`나 명세 일부가 남아 있으면 붙여넣기만 되고 제출되지 않은 것이다. 이때는 같은 명세를 다시 보내지 말고 `orca terminal send --terminal <handle> --enter`로 Enter만 보낸다.
-   - 특히 기존 터미널을 재사용할 때(`--terminal`) 잘 생긴다.
-   - `orca terminal read`의 결과에는 draft가 나오지 않으니 이 확인에 쓰지 않는다.
+2. 이번 지휘 세션에서 처음 맡기는 것이면 **준비**를 한다.
+3. 등급을 정하고 목록에서 작업자를 고른 뒤([tiers.md](tiers.md)), `state.md` 둘째 줄에 `등급: <등급> · 작업자: <표기>`를 적고 맡김 기록에 한 줄을 더한다. 그다음 새 worktree에 **띄우기**를 한다([tiers.md](tiers.md) "띄우기"). 모델·강도·Codex fast를 주는 방법은 실행 환경 문서의 "띄우기"에 있다.
+4. **제출 확인**을 한다. 제출되지 않았으면 같은 명세를 처음부터 다시 보내지 않고 실행 환경 문서의 방법으로 바로잡는다.
 
 동시에 맡긴 이슈들이 같은 연결 지점을 각자 만들 것 같으면, 관리자가 그 **공용 계약** 파일을 `.local/orchestration/`에 직접 써서 "내용 그대로 복사"하라고 모두에게 보낸다. 같은 내용의 파일은 병합 때 충돌하지 않는다.
 
-**완료 기준**: 맡긴 이슈마다 작업자 화면에서 "Working"이 보인다. 점검 대상 등급이면 `spec-check.md`가 있다.
+**완료 기준**: 맡긴 이슈마다 제출 확인에서 작업이 시작된 것을 봤다. 점검 대상 등급이면 `spec-check.md`가 있다.
 
 ### 3. 기다리며 메시지 처리
 
-`check --run <run> --wait --types "worker_done,escalation,question"`을 백그라운드로 돌려 **깨어나는 신호로만** 쓴다. 그 출력은 파일로 받든 grep을 거치든 한국어가 깨진다. 깨어나면 내용은 `check --run <run> --json | PYTHONIOENCODING=utf-8 python -I -c "..."`처럼 python으로 바로 넘겨 다시 읽는다. ack하기 전까지는 같은 묶음이 다시 나온다.
+**기다리기**를 한다. 깨어날 때마다 들어온 것을 처리하고 다시 기다린다. 아무것도 들어오지 않고 깨어났으면 사용자에게 단계만 한 줄로 알린다.
 
-- **heartbeat**: ack하고 계속 기다린다. 사용자에게는 단계만 한 줄로 알린다.
-- **question**: 이슈, 프로젝트 설정의 스펙·문서에 답이 있으면 답한다. 사용자만 정할 수 있는 결정이면 사용자에게 묻고, 받은 답을 전달한다.
-  - 답은 반드시 `orca orchestration reply --run <run> --id <질문 msg_id> --body "..."`로 보낸다.
-  - `send --to dispatch:...`로 보내면 작업자의 `ask`는 답을 받지 못하고 시간 초과된다.
-- **worker_done**: 4단계로 간다.
-
-메시지를 처리하기 전에는 ack하지 않는다.
+- **질문**: 이슈, 프로젝트 설정의 스펙·문서에 답이 있으면 **답하기**로 답한다. 사용자만 정할 수 있는 결정이면 사용자에게 묻고, 받은 답을 전달한다. 권한 승인처럼 사람이 직접 눌러야 하는 요청이면 사용자에게 알린다.
+- **완료 보고**: 4단계로 간다.
 
 ### 4. 교차 검토
 
-구현 작업자가 끝나면 `state.md`를 `검토 중`으로 바꾸고, 그 작업자를 `worker-retain`으로 남겨 둔다(수정 지시에 재사용). 그다음 검토 목록에서 검토자를 고른다([tiers.md](tiers.md) "검토자 고르기").
+구현 작업자가 끝나면 `state.md`를 `검토 중`으로 바꾸고, 그 작업자를 **남겨 두기**한다(수정 지시에 재사용). 그다음 검토 목록에서 검토자를 고른다([tiers.md](tiers.md) "검토자 고르기").
 
-- 에이전트면 [review-template.md](review-template.md)를 채워 **같은 worktree**(`--worktree "id:<worktree id>"`)에 새로 띄운다. 모델·강도는 검토 목록의 표기대로 주고, [tiers.md](tiers.md)의 "띄우기"를 따른다(Codex면 fast를 정한다. 검토는 기본으로 켜는 경우다).
+- 에이전트면 [review-template.md](review-template.md)를 채워 구현자와 **같은 worktree**에 새로 **띄우기**한다. 모델·강도는 검토 목록의 표기대로 주고, [tiers.md](tiers.md)의 "띄우기"를 따른다(Codex면 fast를 정한다. 검토는 기본으로 켜는 경우다).
 - `관리자`면 [tiers.md](tiers.md)의 "관리자 확인"을 한다.
 - 2차 의견을 받을 검토면([opencode.md](opencode.md) "2차 의견") 검토자를 띄우면서 함께 묻는다.
 
@@ -158,7 +167,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
 
 ### 6. PR과 병합
 
-병합 방식이 `지시`면 먼저 `state.md`를 `지시 대기`로 바꾸고, 결과(7단계 항목)를 보고한 뒤 1단계로 간다. 아래 동작은 사용자가 지시할 때만 한다. 작업자는 `worker-retain`으로 남기고 worktree도 둔다. 지휘 현황 패널의 `PR 올려`·`병합해` 버튼은 `<작업 이름> PR 올려`, `<작업 이름> 병합해`를 사용자의 말로 보낸다. 직접 친 지시와 똑같이 처리한다.
+병합 방식이 `지시`면 먼저 `state.md`를 `지시 대기`로 바꾸고, 결과(7단계 항목)를 보고한 뒤 1단계로 간다. 아래 동작은 사용자가 지시할 때만 한다. 작업자는 **남겨 두기**하고 worktree도 둔다. 지휘 현황 패널의 `PR 올려`·`병합해` 버튼은 `<작업 이름> PR 올려`, `<작업 이름> 병합해`를 사용자의 말로 보낸다. 직접 친 지시와 똑같이 처리한다.
 
 | 사용자 지시 | 할 일 |
 | --- | --- |
@@ -171,16 +180,16 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca 위에서 "등급�
 병합 방식이 `자동`이면 1부터 차례로 한다.
 
 1. 브랜치를 push하고 [pr-template.md](pr-template.md)로 PR을 만든다. GitHub 이슈면 본문에 `Closes #<n>`을 넣고, 다른 저장소면 이슈 위치를 적는다.
-2. `main`이 그사이 앞으로 갔으면, 같은 worktree에 `light` 목록의 작업자(기본은 OpenCode)를 새로 띄워 `main` 위로 rebase하고 관련 테스트를 다시 돌리라고 맡긴다. 충돌 해결도 그 작업자가 한다. 같은 동작이 양쪽에서 바뀐 충돌이라 되돌리고 보고하면 원래 구현 작업자에게 맡긴다([opencode.md](opencode.md)의 "rebase"). "main 변경" 안내는 **진행 중인 Dispatch가 구현 작업일 때만** 보낸다. 검토 중인 이슈는 그 검토가 끝난 뒤 다음 구현 지시에 rebase를 넣는다(검토자에게 rebase 안내를 보내지 않는다).
+2. `main`이 그사이 앞으로 갔으면, 같은 worktree에 `light` 목록의 작업자(기본은 OpenCode)를 새로 **띄우기**해 `main` 위로 rebase하고 관련 테스트를 다시 돌리라고 맡긴다. 충돌 해결도 그 작업자가 한다. 같은 동작이 양쪽에서 바뀐 충돌이라 되돌리고 보고하면 원래 구현 작업자에게 맡긴다([opencode.md](opencode.md)의 "rebase"). "main 변경" 안내는 **진행 중인 작업이 구현일 때만** **보내기**한다. 검토 중인 이슈는 그 검토가 끝난 뒤 다음 구현 지시에 rebase를 넣는다(검토자에게 rebase 안내를 보내지 않는다).
 3. `gh pr merge <PR> --<병합 방법> --subject "<제목> (<이슈 표시>)"`로 병합하고 원격 브랜치를 지운다. 병합 방법은 프로젝트 설정 "병합" 절(`merge`/`squash`/`rebase`, 없으면 `merge`)이다.
 4. 메인 저장소의 `main`을 pull하고, GitHub 이슈가 아니면 이슈를 닫는다([trackers.md](trackers.md)). `state.md`를 `끝`으로 바꾼다.
-5. 작업자들을 `worker-release`로 정리한다. 재사용한 터미널은 `retained`(`user_takeover` 등)로 남을 수 있다. `worker-list --run <run> --terminal-state reclaimable`이 0이면 정리가 끝난 것이다.
+5. 이 작업의 작업자들을 **정리**한다.
 6. **병합한 worktree는 바로 지운다**(디스크 용량 확보: worktree마다 의존성 설치와 빌드 결과가 있어 크다). 지우기 전에 셋을 확인한다.
    - 병합됐다: PR이 `MERGED`이거나, 그 worktree의 `HEAD`가 `origin/main`에 들어 있다(`git merge-base --is-ancestor <HEAD> origin/main`). squash·rebase 병합은 앞쪽으로 판단한다.
    - 남은 변경이 없다: `git -C <worktree> status --porcelain`이 비었고, push하지 않은 커밋이 없다(`git -C <worktree> log @{u}..HEAD`가 비었다).
    - 그 worktree를 쓰는 작업자 터미널이 남아 있지 않다. 남아 있으면 먼저 닫는다.
 
-   셋 다 맞으면 `orca worktree rm --worktree path:<worktree 경로>`로 지운다. 병합된 로컬 브랜치도 함께 지워진다. 하나라도 어긋나면 지우지 않고 사용자에게 이유를 알린다.
+   셋 다 맞으면 **worktree 지우기**를 한다. 병합된 로컬 브랜치도 함께 지운다. 하나라도 어긋나면 지우지 않고 사용자에게 이유를 알린다.
    - **앞부분만 병합하고 마무리를 같은 worktree에서 이어 갈 이슈**는 지우지 않는다. 마무리까지 병합한 뒤 지운다.
    - 관리자가 직접 쓰는 worktree(예: UI 다듬기)도 같은 규칙을 따른다. 병합 전에는 지우지 않는다.
    - 작업 파일(명세·검토 보고서·`state.md`)은 메인 저장소의 `.local/orchestration/`에 있으므로 worktree를 지워도 남는다.

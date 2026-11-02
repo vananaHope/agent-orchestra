@@ -97,6 +97,7 @@ skills/check-limits/     Codex·Claude 실제 사용률 측정(따로 불러도 
 skills/configure/        설정 창으로 프로젝트 설정 만들기·고치기(사용자만 부름)
 skills/orchestrate-issues/
   SKILL.md               역할, 배치, 시작 조건, 1~7단계
+  backends/orca.md       실행 환경 Orca에서 작업자 띄우기·기다리기·답하기·정리하는 명령
   trackers.md            이슈 저장소별 동작(GitHub, 로컬 md, 아티팩트)
   limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드)
   tiers.md               등급 기준, 등급별 구현·검토 목록, 검토자 고르기, 관리자 확인, 맡김 기록
