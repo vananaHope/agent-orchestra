@@ -178,7 +178,7 @@ Settings for the `orchestrate-issues` skill (agent-orchestra plugin). See `docs/
 설정을 저장한 뒤에 한다. 설정 창이 먼저 뜨도록, 시간이 걸리거나 비용이 드는 확인(Codex 한도 측정)은 여기로 미뤘다. 빠진 것은 사용자에게 알리고, 갖춰진 뒤에 지휘를 시작한다. 설정은 그대로 둔다.
 
 - 코드 저장소가 GitHub(회사 GitHub Enterprise 포함)이면 `gh`가 그 호스트에 로그인돼 있다(`gh auth status`).
-- `orca`, `codex`, `opencode` 명령이 있다.
+- 실행 환경 문서([SKILL.md](SKILL.md) "실행 환경")가 요구하는 명령과 `codex`, `opencode` 명령이 있다.
 - `check-limits` 스킬로 잰 Codex와 Claude가 둘 다 `unknown`이 아니다. `unknown`이면 그 스킬이 알려 주는 원인을 사용자에게 전한다.
 
 

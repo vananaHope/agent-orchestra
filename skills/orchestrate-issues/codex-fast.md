@@ -26,10 +26,6 @@ Codex fast(`service_tier`)는 같은 일을 1.5~2배 빨리 끝내지만 사용�
 
 ## 적용
 
-Orca `worker-start`에는 Codex 설정을 넘길 옵션이 없다. Codex는 작업 폴더의 `.codex/config.toml`을 전역 설정보다 우선해 읽으므로 거기에 쓴다. 이 파일은 신뢰된 경로에서만 읽힌다(`$CODEX_HOME/config.toml`의 `[projects.'<경로>'] trust_level = "trusted"`. 상위 경로를 신뢰해도 된다).
+켜고 끄는 방법은 실행 환경 문서의 "띄우기"에 있다. 껐을 때도 끈다고 분명히 준다. 전역 설정이 fast일 수 있기 때문이다.
 
-1. worktree가 아직 없으면 먼저 만든다([opencode.md](opencode.md) "모델과 강도"의 1). 저장소에 이미 커밋된 `.codex/config.toml`이 있으면 쓰지 않고 전역 설정대로 띄운 뒤 사용자에게 알린다.
-2. `<worktree>/.codex/config.toml`에 켜면 `service_tier = "fast"`, 끄면 `service_tier = "default"`를 쓴다. 끌 때도 파일을 지우지 않고 적는 것은 전역 설정이 fast일 수 있기 때문이다. 같은 worktree에 다음 Codex 작업자를 띄울 때마다 다시 정해 고친다.
-3. 이 파일이 커밋되지 않게 메인 저장소의 `.git/info/exclude`에 `/.codex/`를 더한다(worktree가 함께 쓰는 파일이라 한 번이면 된다).
-4. [tiers.md](tiers.md)의 "띄우기"대로 띄운다.
-5. 작업자가 처음 응답하면 `$CODEX_HOME/sessions/`에서 `cwd`가 그 worktree인 가장 새 세션 기록의 `"service_tier"`를 본다. 켰으면 `priority`, 껐으면 `default`여야 한다. 다르면 신뢰 설정을 확인하고 사용자에게 알린다.
+작업자가 처음 응답하면 `$CODEX_HOME/sessions/`에서 `cwd`가 그 worktree인 가장 새 세션 기록의 `"service_tier"`를 본다. 켰으면 `priority`, 껐으면 `default`여야 한다. 다르면 신뢰 설정을 확인하고 사용자에게 알린다.
