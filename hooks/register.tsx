@@ -1,7 +1,7 @@
 // agent-orchestra 지휘 세션의 상태 띠와 패널.
 // 지휘 세션(이 세션에서 orchestrate-issues가 불림)에서만 그리고, 그때만 몇 초마다 다시 읽는다.
 // 작업 단계는 `.local/orchestration/*/state.md`, 맡길 이슈는 관리자가 쓰는 `.local/orchestration/frontier.json`,
-// 작업자 활동은 Orca가 자기 훅으로 본 값(worker-list), 한도는 세션이 받은 Claude 창과 check-limits의 codex_limit.py에서 온다.
+// 작업자 활동은 Orca가 자기 훅으로 본 값(worker-list), 없으면 herdr-core가 받은 상태(`hc ls`), 한도는 세션이 받은 Claude 창과 check-limits의 codex_limit.py에서 온다.
 //
 // 모양은 ClaudeRipple의 터미널 표기를 따른다. 띠는 기호와 값을 두 칸 간격으로 늘어놓은 조용한 한 줄이고,
 // 평소에는 흐리게, 볼 일이 있을 때만 노랑(입력 기다림)과 빨강(멈춤)을 쓴다. 패널은 `지휘 현황  진행 N · 완료 N` 아래
@@ -14,9 +14,10 @@ import type { EngineInterface, Register } from 'claude-code'
 import type { FrontierIssue, Limit, Snapshot, Task } from '../types'
 import {
   ACTIVE_PHASES, ACTIVITY_LABEL, DONE_PHASE, USER_PHASES, ago, activityOf, bar, claudeLimits, codexLimits, cols,
-  countTasks, frontierRows, isParked, isSameDay, limitGroups, monthDay, parseFrontier, parseState, phaseSections, workerOf,
+  countTasks, frontierRows, hcActivityOf, hcWorkerOf, isParked, isSameDay, limitGroups, monthDay, parseFrontier, parseState,
+  phaseSections, workerOf,
 } from './model.ts'
-import type { OrcaWorker } from './model.ts'
+import type { HcTerminal, OrcaWorker } from './model.ts'
 
 const PANE = 'orchestra-status'
 const PANE_TITLE = '지휘 현황'
@@ -88,6 +89,16 @@ async function orcaJson($: EngineInterface, argv: string[]): Promise<Record<stri
   return parsed.result
 }
 
+/** herdr-core의 살아 있는 터미널. hc가 없거나 코어가 안 떠 있으면 실패한다. */
+async function hcTerminals($: EngineInterface): Promise<HcTerminal[]> {
+  const result = await $.process.run(['hc', 'ls', '--json'], { timeoutMs: RUN_TIMEOUT_MS })
+  if (result.exitCode !== 0) throw new Error(`hc ls: ${result.stderr.trim() || 'failed'}`)
+  return ((JSON.parse(result.stdout) as { terminals?: HcTerminal[] }).terminals) ?? []
+}
+
+/** hc 터미널은 `hc:<주소>`로 적어 Orca 터미널 핸들과 가른다. */
+const HC_PREFIX = 'hc:'
+
 /** 끝나지 않은 작업 전부와 오늘 끝난 작업 */
 async function readTasks($: EngineInterface, base: string, now: number): Promise<Omit<Task, 'activity'>[]> {
   const dir = `${base}/.local/orchestration`
@@ -127,27 +138,35 @@ async function collect($: EngineInterface, previous: Snapshot | null): Promise<S
   const found = base ? await readTasks($, base, now).catch(error => (errors.push(errorText(error)), [])) : []
   const frontier = base ? await readFrontier($, base).catch(error => (errors.push(`frontier.json: ${errorText(error)}`), undefined)) : undefined
 
+  // 실행 환경(backends/)마다 작업자를 읽는 곳이 다르다. herdr 터미널 안이면(HC_TERMINAL_ID) herdr-core, 아니면 Orca.
   let workers: OrcaWorker[] = []
+  let hc: HcTerminal[] = []
   const outputs = new Map<string, number>()
+  let readFailed = false
   if (found.some(isActive)) {
     try {
-      const list = await orcaJson($, ['orchestration', 'worker-list', '--limit', '100'])
-      workers = (list.workers as OrcaWorker[] | undefined) ?? []
-      const terminals = await orcaJson($, ['terminal', 'list'])
-      for (const terminal of (terminals.terminals as { handle?: string; lastOutputAt?: number }[] | undefined) ?? []) {
-        if (terminal.handle && typeof terminal.lastOutputAt === 'number') outputs.set(terminal.handle, terminal.lastOutputAt)
+      if (await $.env.get('HC_TERMINAL_ID')) {
+        hc = await hcTerminals($)
+      } else {
+        const list = await orcaJson($, ['orchestration', 'worker-list', '--limit', '100'])
+        workers = (list.workers as OrcaWorker[] | undefined) ?? []
+        const terminals = await orcaJson($, ['terminal', 'list'])
+        for (const terminal of (terminals.terminals as { handle?: string; lastOutputAt?: number }[] | undefined) ?? []) {
+          if (terminal.handle && typeof terminal.lastOutputAt === 'number') outputs.set(terminal.handle, terminal.lastOutputAt)
+        }
       }
-    } catch (error) { errors.push(errorText(error)) }
+    } catch (error) { readFailed = !workers.length; errors.push(errorText(error)) }
   }
   const tasks: Task[] = found.map(task => {
     const worker = isActive(task) ? workerOf(task.name, workers) : undefined
-    const terminal = worker?.agentTerminalHandle
-    const lastOutputAt = terminal ? outputs.get(terminal) : undefined
-    const agent = worker?.projection?.provider?.id ?? undefined
+    const hcWorker = isActive(task) && !worker ? hcWorkerOf(task.name, hc) : undefined
+    const terminal = worker?.agentTerminalHandle ?? (hcWorker?.address ? HC_PREFIX + hcWorker.address : undefined)
+    const lastOutputAt = worker?.agentTerminalHandle ? outputs.get(worker.agentTerminalHandle) : undefined
+    const agent = worker?.projection?.provider?.id ?? hcWorker?.agent ?? undefined
     return {
       ...task,
-      // Orca를 못 읽었으면 작업자가 없다고 하지 않는다.
-      activity: !isActive(task) ? 'idle' : errors.length && !workers.length ? 'unknown' : activityOf(worker),
+      // 작업자를 못 읽었으면 작업자가 없다고 하지 않는다.
+      activity: !isActive(task) ? 'idle' : readFailed ? 'unknown' : worker ? activityOf(worker) : hcActivityOf(hcWorker),
       ...(agent ? { agent } : {}),
       ...(terminal ? { terminal } : {}),
       ...(lastOutputAt ? { lastOutputAt } : {}),
@@ -218,7 +237,10 @@ async function togglePane($: EngineInterface): Promise<boolean> {
 
 /** 작업자 터미널 탭으로 옮겨 간다. */
 async function openWorker($: EngineInterface, terminal: string) {
-  await $.process.run(['orca', 'terminal', 'switch', '--terminal', terminal, '--json'], { timeoutMs: RUN_TIMEOUT_MS }).catch(() => undefined)
+  const argv = terminal.startsWith(HC_PREFIX)
+    ? ['herdr-app', 'do', 'agent.focus', '--terminal', terminal.slice(HC_PREFIX.length)]
+    : ['orca', 'terminal', 'switch', '--terminal', terminal, '--json']
+  await $.process.run(argv, { timeoutMs: RUN_TIMEOUT_MS }).catch(() => undefined)
 }
 
 /** 사용자가 칠 지시를 그대로 지휘 세션에 보낸다. 지휘 세션이 일하는 중이면 그 턴이 끝난 뒤 들어간다. */

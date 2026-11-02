@@ -2,7 +2,7 @@ import type { TestBody } from 'claude-code/testing'
 import { expect, test } from 'claude-code/testing'
 
 import type { Snapshot, Task } from '../types'
-import { activityOf, codexLimits, countTasks, frontierRows, isParked, parseFrontier, parseState, phaseSections, workerOf } from '../hooks/model.ts'
+import { activityOf, codexLimits, countTasks, frontierRows, hcActivityOf, hcWorkerOf, isParked, parseFrontier, parseState, phaseSections, workerOf } from '../hooks/model.ts'
 import type { OrcaWorker } from '../hooks/model.ts'
 
 /** 테스트 본문이 받는 `on`(엔진 자리에 훅을 거는 함수). 키트가 이 타입을 따로 내보내지 않아 본문의 형식에서 꺼낸다. */
@@ -53,6 +53,29 @@ test('Orca가 본 활동을 옮기고, 모르는 값은 짐작하지 않는다',
   expect(activityOf(undefined)).toBe('none')
   expect(activityOf(worker('a', 'something-new'))).toBe('unknown')
   expect(activityOf({ ...worker('a', 'working'), projection: { liveness: { verdict: 'lost' } } })).toBe('unknown')
+})
+
+test('herdr에서는 터미널 이름으로 작업자를 찾고, 일하는 것을 먼저 고른다', () => {
+  const terminals = [
+    { address: 't1', name: 'issue-25-review', state: 'live', status: 'idle' },
+    { address: 't2', name: 'issue-25-fix', state: 'live', status: 'working' },
+    { address: 't3', name: 'issue-250-impl', state: 'live', status: 'working' },
+    { address: 't4', name: 'issue-7-impl', state: 'finished', status: 'done' },
+    { address: 't5', agent: 'pwsh.exe', state: 'live' },
+  ]
+  expect(hcWorkerOf('issue-25', terminals)?.address).toBe('t2')
+  expect(hcWorkerOf('issue-250', terminals)?.address).toBe('t3')
+  expect(hcWorkerOf('issue-7', terminals)).toBe(undefined)
+})
+
+test('herdr-core가 받은 상태를 옮기고, 알리지 않은 상태는 짐작하지 않는다', () => {
+  expect(hcActivityOf({ status: 'working' })).toBe('working')
+  expect(hcActivityOf({ status: 'blocked' })).toBe('waiting')
+  expect(hcActivityOf({ status: 'done' })).toBe('idle')
+  expect(hcActivityOf({ status: 'idle' })).toBe('idle')
+  expect(hcActivityOf({ status: 'error' })).toBe('unknown')
+  expect(hcActivityOf({})).toBe('unknown')
+  expect(hcActivityOf(undefined)).toBe('none')
 })
 
 test('진행 단계인데 작업자가 없거나 오래 쉬면 멈춤이다', () => {

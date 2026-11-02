@@ -18,7 +18,19 @@ OpenCode Go는 빠르고 범위가 분명한 일을 맡는다. 어느 일에 쓰
 
 ## 모델과 강도
 
-작업자로 띄울 때 모델과 강도(`variant`)를 주는 방법은 실행 환경 문서의 "띄우기"에 있다. `model`은 `opencode models`가 보여 주는 `provider/model` 이름이고, 모델을 정하지 않았으면 `~/.config/opencode/opencode.json`의 기본 모델이다. 실제로 쓰인 값은 `~/.local/share/opencode/opencode.db`의 `session_v2.model`에서 확인할 수 있다.
+OpenCode 대화형 화면은 모델 옵션을 받지 않는다(Orca `worker-start`도 OpenCode에는 `--model`을 받지 않는다). 대신 OpenCode가 worktree 루트의 `opencode.json`을 읽으므로, 띄우기 전에 거기에 기본 에이전트(`build`)의 모델과 강도(`variant`)를 적는다. 모델과 강도를 둘 다 정하지 않았으면 이 절을 건너뛰고 기본값으로 띄운다.
+
+1. worktree가 아직 없으면 먼저 만든다(실행 환경 문서의 "worktree 만들기"). 저장소에 이미 커밋된 `opencode.json`이 있으면 이 방법을 쓰지 않고 기본값으로 띄운 뒤 사용자에게 알린다.
+2. worktree 루트에 쓴다. `model`은 `opencode models`가 보여 주는 `provider/model` 이름이고, 모델을 정하지 않았으면 `~/.config/opencode/opencode.json`의 기본 모델을 적는다.
+
+   ```json
+   { "agent": { "build": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "high" } } }
+   ```
+3. 이 파일이 커밋되지 않게 메인 저장소의 `.git/info/exclude`에 `/opencode.json`을 더한다(worktree가 함께 쓰는 파일이라 한 번이면 된다).
+4. worktree에서 `opencode debug agents`를 돌려 `build`의 `model`에 정한 모델과 `variant`가 보이는지 확인한다.
+5. 실행 환경 문서의 "띄우기"대로 그 worktree에 띄운다.
+
+같은 worktree에서 다음 OpenCode 작업자의 강도가 다르면 파일을 고치고 4번을 다시 한다. 실제로 쓰인 값은 `~/.local/share/opencode/opencode.db`의 `session_v2.model`에서 확인할 수 있다.
 
 `opencode run`(아래 빠른 답변)에서는 `-m provider/model#variant`로 준다.
 

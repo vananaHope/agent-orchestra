@@ -1,4 +1,4 @@
-// 지휘 상태를 읽어 내는 순수 함수들. register.tsx가 파일과 Orca 출력을 넘기고, 테스트도 여기를 본다.
+// 지휘 상태를 읽어 내는 순수 함수들. register.tsx가 파일과 Orca·herdr-core 출력을 넘기고, 테스트도 여기를 본다.
 
 import type { Activity, FrontierIssue, FrontierStatus, Limit, Task } from '../types'
 
@@ -8,6 +8,33 @@ export const ACTIVE_PHASES = ['구현 중', '검토 중', '수정 중'] as const
 export const USER_PHASES = ['지시 대기', 'PR 열림'] as const
 /** 병합까지 끝난 단계. 스냅숏에는 오늘 끝난 것만 남는다. */
 export const DONE_PHASE = '끝'
+/** herdr-core `hc ls --json`의 터미널 한 줄 중 여기서 쓰는 부분 */
+export type HcTerminal = {
+  address?: string
+  name?: string
+  agent?: string
+  state?: string
+  status?: string
+}
+
+/**
+ * herdr에서 작업의 작업자: 이름이 `<작업 이름>-<역할>`인 살아 있는 터미널(backends/herdr.md "띄우기").
+ * 일하는 것을 먼저, 그다음 사람을 기다리는 것, 없으면 첫 것.
+ */
+export function hcWorkerOf(task: string, terminals: readonly HcTerminal[]): HcTerminal | undefined {
+  const mine = terminals.filter(terminal => terminal.state === 'live' && !!terminal.name?.startsWith(task + '-'))
+  return mine.find(terminal => terminal.status === 'working') ?? mine.find(terminal => terminal.status === 'blocked') ?? mine[0]
+}
+
+/** 프로그램이 OSC 7501로 알린 상태. 알리지 않았거나 모르는 값은 unknown. */
+export function hcActivityOf(terminal: HcTerminal | undefined): Activity {
+  if (!terminal) return 'none'
+  if (terminal.status === 'working') return 'working'
+  if (terminal.status === 'blocked') return 'waiting'
+  if (terminal.status === 'idle' || terminal.status === 'done') return 'idle'
+  return 'unknown'
+}
+
 /** 작업자가 쉬는데 단계가 그대로면 멈춤으로 보는 시간 */
 export const PARKED_AFTER_MS = 5 * 60 * 1000
 

@@ -1,6 +1,6 @@
 # agent-orchestra
 
-Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해 GitHub 이슈를 처리한다.
+Claude Code 플러그인. Orca 또는 herdr app 위에서 여러 코딩 에이전트를 지휘해 GitHub 이슈를 처리한다.
 
 - 등급별 배치: 일마다 등급(light/standard/hard/max)을 정하고, 등급별 구현 목록과 검토 목록(OpenCode·Codex·Claude·관리자, 모델·추론 강도 포함)에서 작업자와 검토자를 고른다. 목록은 설정 창에서 정한다. 검토자는 구현자와 다른 계열이고, UI 작업은 Claude가 구현한다(검토 기본값은 Codex). OpenCode `plan`의 2차 의견을 언제 받을지도 정할 수 있다.
 - OpenCode Go가 light·standard의 앞자리(범위가 분명한 구현·지적 수정·rebase)와 빠른 판단을 맡는다.
@@ -10,7 +10,7 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 ## 지휘 구성
 
-관리자(`orchestrate-issues`를 부른 Claude Code 세션)는 코드를 쓰지 않는다. 한도와 이슈 저장소를 보고 일을 골라 Orca로 작업자를 띄우고, 진행 상태를 작업 파일에 남긴다. 띠와 패널은 그 파일을 읽어 보여 줄 뿐이다.
+관리자(`orchestrate-issues`를 부른 Claude Code 세션)는 코드를 쓰지 않는다. 한도와 이슈 저장소를 보고 일을 골라 실행 환경(Orca 또는 herdr app)으로 작업자를 띄우고, 진행 상태를 작업 파일에 남긴다. 띠와 패널은 그 파일을 읽어 보여 줄 뿐이다.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/orchestra-architecture-dark.png">
@@ -33,8 +33,10 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 
 ## 필요한 것
 
-- `gh`(로그인), `orca`, `codex`, `opencode` 명령
-- Orca의 `orchestration` 스킬
+- `gh`(로그인), `codex`, `opencode` 명령
+- 실행 환경 하나
+  - Orca: `orca` 명령과 Orca의 `orchestration` 스킬
+  - herdr app: herdr app과 `hc` 명령. 관리자 Claude Code를 herdr app의 터미널에서 연다
 - Claude 사용률 측정: Claude Code 로그인(`~/.claude/.credentials.json`). Windows·Linux만 지원하고, macOS는 로그인 정보가 키체인에 있어 지원하지 않는다
 - Python 3.10 이상(보조 스크립트)
 
@@ -64,10 +66,10 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
   <img alt="지휘 상태 띠: 프롬프트 위 한 줄에 '◆ 지휘  ◐ issue-13 입력 대기  ● 일하는 중 2  구현 2 · 검토 1  ◇ 지시 대기 1  │  Codex 7d 7%  Claude 5h 83% 7d 41%  p: 패널 ●  ctrl+x tab'. 위에 부분마다 뜻을 적었다: 지휘 세션에만 나옴, 먼저 볼 것(입력 대기·멈춤·막힘, 하나면 이름), 진행(일하는 작업자 수, 단계별 작업 수), 사용자 차례(지시 대기·PR 열림 작업 수), 한도(80% 넘으면 노랑, 100%면 빨강), 패널 열고 닫기(● 열림, ctrl+x tab으로 띠에 들어가 p)." src="docs/diagrams/orchestra-band.png">
 </picture>
 
-- 작업 단계는 각 작업의 `state.md`, 작업자 활동(일하는 중·입력 기다림)은 Orca가 자기 훅으로 본 값(`orca orchestration worker-list`), 한도는 세션이 받은 Claude 창과 `check-limits`의 Codex 측정에서 온다. 10초마다 다시 읽는다(Codex 한도는 5분마다).
+- 작업 단계는 각 작업의 `state.md`, 작업자 활동(일하는 중·입력 기다림)은 Orca가 자기 훅으로 본 값(`orca orchestration worker-list`), herdr app이면 herdr-core가 받은 상태(`hc ls`), 한도는 세션이 받은 Claude 창과 `check-limits`의 Codex 측정에서 온다. 10초마다 다시 읽는다(Codex 한도는 5분마다).
 - 단계는 진행 중인데 작업자가 없거나 5분 넘게 쉬면 `⏸ 멈춤`으로 표시한다. 관리자가 `state.md`에 `막힘: <풀릴 조건>`을 적은 작업은 멈춤 대신 `■ 막힘: <조건>`으로 띠와 패널에 나온다.
 - 패널: `/orchestra-status`(다시 치면 닫힘) 또는 띠의 `패널`. `/orchestra-status`로 열면 패널이 키를 받는다. Tab·화살표로 버튼을 고르고 Enter로 누르며, Esc로 프롬프트에 돌아간다. 띠의 `패널`로 열었거나 키가 프롬프트에 있으면 ctrl+x tab이나 클릭으로 패널에 들어간다. `p`(닫기)·`r`(새로 고침)·숫자(열기)는 패널이 키를 쥐었을 때만 눌리고, 프롬프트에서 친 글자는 그대로 들어간다.
-- 패널은 `지휘 현황  진행 N · 완료 N` 아래 단계마다(구현 중·검토 중·수정 중·지시 대기·PR 열림, 맡길 이슈, 오늘 `끝`이 된 것은 완료) 칸을 나눠 이름·작업자·날짜(`MM/DD`)를 한 줄씩 보여 주고, `열기`로 그 작업자의 Orca 터미널 탭으로 간다. 작업이 없는 단계는 칸을 그리지 않는다. 기호 색이 활동이다: 보라 일하는 중, 노랑 입력 대기, 빨강 멈춤·막힘, 초록 완료. 완료가 둘 이상이면 `✓ issue-8, issue-7` 한 줄로 접고, `펼치기`(`d`)로 한 줄씩 본다.
+- 패널은 `지휘 현황  진행 N · 완료 N` 아래 단계마다(구현 중·검토 중·수정 중·지시 대기·PR 열림, 맡길 이슈, 오늘 `끝`이 된 것은 완료) 칸을 나눠 이름·작업자·날짜(`MM/DD`)를 한 줄씩 보여 주고, `열기`로 그 작업자의 터미널(Orca 탭 또는 herdr app 창)로 간다. 작업이 없는 단계는 칸을 그리지 않는다. 기호 색이 활동이다: 보라 일하는 중, 노랑 입력 대기, 빨강 멈춤·막힘, 초록 완료. 완료가 둘 이상이면 `✓ issue-8, issue-7` 한 줄로 접고, `펼치기`(`d`)로 한 줄씩 본다.
 - 지시 버튼: `지시 대기` 줄의 `PR 올려`, `PR 열림` 줄의 `병합해`(5초 안에 한 번 더 눌러야 보냄), 맡길 이슈 `●` 줄의 `맡기기`. 누르면 `issue-9 PR 올려`처럼 사용자가 칠 말을 지휘 세션에 그대로 보낸다. 지휘 세션이 일하는 중이면 그 턴이 끝난 뒤 들어간다. 보낸 버튼은 지휘 세션이 처리해 그 작업의 단계(맡길 이슈면 목록)가 바뀔 때까지 `보냄`으로 남는다. 10분이 지나도 그대로면 다시 누를 수 있다.
 - 맡길 이슈: 관리자가 1단계마다 `.local/orchestration/frontier.json`에 쓰는 목록이다. `●` 바로 맡길 수 있음, `○` 선행 이슈 기다림(`← issue-21`), `■` 막힘(풀릴 조건)으로 보여 주고, 제목 옆에 목록을 쓴 지 얼마나 됐는지 적는다. 작업 폴더가 생긴 이슈는 진행 칸에 나오므로 여기서는 뺀다.
 
@@ -87,7 +89,7 @@ Claude Code 플러그인. Orca 위에서 여러 코딩 에이전트를 지휘해
 .claude-plugin/          플러그인·마켓플레이스 정의(mod 설정 statusBand·pollSeconds 포함)
 hooks/                   지휘 상태 띠·패널 mod
   register.tsx           띠·패널 그리기, 지휘 세션 판별, 주기적 읽기
-  model.ts               state.md·frontier.json·Orca 작업자·한도를 상태로 바꾸는 순수 함수
+  model.ts               state.md·frontier.json·Orca·herdr 작업자·한도를 상태로 바꾸는 순수 함수
 docs/diagrams/           README의 지휘 구성·작업 단계·띠·패널 그림(HTML 원본과 라이트·다크 PNG)
 types/index.d.ts         mod가 세션에 저장하는 값의 형식
 tests/status.test.tsx    mod 테스트(`claude plugin test .`)
@@ -98,6 +100,7 @@ skills/configure/        설정 창으로 프로젝트 설정 만들기·고치�
 skills/orchestrate-issues/
   SKILL.md               역할, 배치, 시작 조건, 1~7단계
   backends/orca.md       실행 환경 Orca에서 작업자 띄우기·기다리기·답하기·정리하는 명령
+  backends/herdr.md      실행 환경 herdr app(`hc`)에서 같은 동작
   trackers.md            이슈 저장소별 동작(GitHub, 로컬 md, 아티팩트)
   limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드)
   tiers.md               등급 기준, 등급별 구현·검토 목록, 검토자 고르기, 관리자 확인, 맡김 기록
