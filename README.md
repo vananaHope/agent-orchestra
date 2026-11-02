@@ -1,20 +1,21 @@
 # agent-orchestra
 
-Claude Code 플러그인. Orca 또는 herdr app 위에서 여러 코딩 에이전트를 지휘해 GitHub 이슈를 처리한다.
+Claude Code 플러그인. Orca·herdr app·T3 Code 위에서 여러 코딩 에이전트를 지휘해 GitHub 이슈를 처리한다.
 
+- 실행 환경: Orca, herdr app, T3 Code 중 관리자 세션이 도는 곳을 알아서 골라 그 방법으로 작업자를 띄운다.
 - 등급별 배치: 일마다 등급(light/standard/hard/max)을 정하고, 등급별 구현 목록과 검토 목록(OpenCode·Codex·Claude·관리자, 모델·추론 강도 포함)에서 작업자와 검토자를 고른다. 목록은 설정 창에서 정한다. 검토자는 구현자와 다른 계열이고, UI 작업은 Claude가 구현한다(검토 기본값은 Codex). OpenCode `plan`의 2차 의견을 언제 받을지도 정할 수 있다.
 - OpenCode Go가 light·standard의 앞자리(범위가 분명한 구현·지적 수정·rebase)와 빠른 판단을 맡는다.
 - Codex·Claude의 실제 사용률을 재서 한도가 차면 배치를 바꾼다(대체 모드, Claude 절약 모드).
 - 이슈 의존 관계에서 임계 경로 순서로 고르고, 교차 검토를 통과하면 병합하고 worktree를 정리한다.
-- 지휘 세션의 프롬프트 위에 지휘 상태 띠를, 옆에 작업별 패널을 보여 준다(작업 단계, 작업자 활동, 한도).
+- 지휘 세션의 프롬프트 위에 지휘 상태 띠를, 옆에 작업별 패널을 보여 준다(작업 단계, 작업자 활동, 한도). Claude Code 터미널 화면에서 도는 Orca·herdr app에서만 보인다.
 
 ## 지휘 구성
 
-관리자(`orchestrate-issues`를 부른 Claude Code 세션)는 코드를 쓰지 않는다. 한도와 이슈 저장소를 보고 일을 골라 실행 환경(Orca 또는 herdr app)으로 작업자를 띄우고, 진행 상태를 작업 파일에 남긴다. 띠와 패널은 그 파일을 읽어 보여 줄 뿐이다.
+관리자(`orchestrate-issues`를 부른 Claude 세션)는 코드를 쓰지 않는다. 한도와 이슈 저장소를 보고 일을 골라 실행 환경(Orca·herdr app·T3 Code)으로 작업자를 띄우고, 진행 상태를 작업 파일에 남긴다. 띠와 패널은 그 파일을 읽어 보여 줄 뿐이다.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/orchestra-architecture-dark.png">
-  <img alt="지휘 구성: 사용자가 관리자에게 요청하고, 관리자는 한도 측정과 이슈 저장소를 보고 Orca로 구현 작업자와 다른 계열 검토자를 같은 worktree에 띄운다. 관리자가 쓴 작업 파일을 지휘 현황 띠·패널이 10초마다 읽어 사용자에게 보여 준다." src="docs/diagrams/orchestra-architecture.png">
+  <img alt="지휘 구성: 사용자가 관리자에게 요청하고, 관리자는 한도 측정과 이슈 저장소를 보고 실행 환경(Orca·herdr app·T3 Code)으로 구현 작업자와 다른 계열 검토자를 같은 worktree에 띄운다. 관리자가 쓴 작업 파일을 지휘 현황 띠·패널이 10초마다 읽어 사용자에게 보여 준다." src="docs/diagrams/orchestra-architecture.png">
 </picture>
 
 작업 하나는 `state.md`의 단계를 따라 움직인다. 검토에서 지적이 나오면 수정과 재검토를 되풀이하고, 병합 방식이 `지시`면 사용자의 "PR 올려"·"병합해"를 기다린다. 끝나면 곧바로 1단계로 돌아가 빈 자리를 채운다.
@@ -23,6 +24,19 @@ Claude Code 플러그인. Orca 또는 herdr app 위에서 여러 코딩 에이�
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/orchestra-lifecycle-dark.png">
   <img alt="작업 단계: 맡김 → 구현 중 → 검토 중. 검토 중에서 수정 필요면 수정 중을 거쳐 재검토하고, 통과하면 지시 병합일 때 지시 대기 → PR 올려 → PR 열림 → 병합해 → 끝, 자동 병합일 때 바로 끝. 끝나면 1단계로 돌아가 빈 자리를 채운다." src="docs/diagrams/orchestra-lifecycle.png">
 </picture>
+
+## 실행 환경
+
+지휘 흐름(등급, 교차 검토, 판정, 병합)은 어디서나 같고, 작업자를 띄우고 기다리고 정리하는 방법만 실행 환경마다 다르다. 관리자는 지휘를 시작할 때 실행 환경을 정해 알린다. 사용자가 직접 말해도 된다.
+
+| | Orca | herdr app | T3 Code |
+| --- | --- | --- | --- |
+| 고르는 기준 | 아래 둘이 아닐 때 | 관리자 셸에 `HC_TERMINAL_ID`가 있음(herdr app 터미널 안) | T3 도구(`delegate_task`)가 있음 |
+| 작업자 띄우기 | `orca orchestration worker-start` | `hc run --bg` | `delegate_task` |
+| 같은 worktree에 검토자 | worktree id로 붙임 | 같은 `--cwd` | 이슈마다 둔 **이슈 담당**이 자기 worktree에 구현자·검토자를 띄움 |
+| 완료·질문 받기 | `check --wait`, `reply` | 작업자가 `hc send`로 관리자에게 보고 | 완료 알림이 오고, 질문은 `t3_pending_request` |
+| 지휘 현황 띠·패널 | 보임 | 보임 | 보이지 않음(`state.md`와 보고로 봄) |
+| 방법을 적은 문서 | [orca.md](skills/orchestrate-issues/backends/orca.md) | [herdr.md](skills/orchestrate-issues/backends/herdr.md) | [t3.md](skills/orchestrate-issues/backends/t3.md) |
 
 ## 설치
 
@@ -37,6 +51,7 @@ Claude Code 플러그인. Orca 또는 herdr app 위에서 여러 코딩 에이�
 - 실행 환경 하나
   - Orca: `orca` 명령과 Orca의 `orchestration` 스킬
   - herdr app: herdr app과 `hc` 명령. 관리자 Claude Code를 herdr app의 터미널에서 연다
+  - T3 Code: Claude·Codex(OpenCode를 쓰면 OpenCode까지) 공급자를 켠 T3 Code. 관리자는 T3 스레드의 Claude다
 - Claude 사용률 측정: Claude Code 로그인(`~/.claude/.credentials.json`). Windows·Linux만 지원하고, macOS는 로그인 정보가 키체인에 있어 지원하지 않는다
 - Python 3.10 이상(보조 스크립트)
 
@@ -59,7 +74,7 @@ Claude Code 플러그인. Orca 또는 herdr app 위에서 여러 코딩 에이�
 
 ### 지휘 상태 띠와 패널
 
-이 세션에서 `orchestrate-issues`가 불리면 프롬프트 위에 띠가 나온다. 다른 세션에는 나오지 않고, 그 세션에서는 읽기도 하지 않는다.
+이 세션에서 `orchestrate-issues`가 불리면 프롬프트 위에 띠가 나온다. 다른 세션에는 나오지 않고, 그 세션에서는 읽기도 하지 않는다. Claude Code 터미널 화면이 있어야 해서 Orca·herdr app에서만 보이고, T3 Code에서는 보이지 않는다.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/orchestra-band-dark.png">
@@ -101,11 +116,12 @@ skills/orchestrate-issues/
   SKILL.md               역할, 배치, 시작 조건, 1~7단계
   backends/orca.md       실행 환경 Orca에서 작업자 띄우기·기다리기·답하기·정리하는 명령
   backends/herdr.md      실행 환경 herdr app(`hc`)에서 같은 동작
+  backends/t3.md         실행 환경 T3 Code에서 같은 동작, 이슈 담당을 두는 2단 위임
   trackers.md            이슈 저장소별 동작(GitHub, 로컬 md, 아티팩트)
   limits.md              한도 판정별 모드(대체 모드, Claude 절약 모드)
   tiers.md               등급 기준, 등급별 구현·검토 목록, 검토자 고르기, 관리자 확인, 맡김 기록
   opencode.md            OpenCode Go 조건, 모델·강도 주기, rebase
-  codex-fast.md          Codex fast를 켤지 정하는 기준과 worktree에 주는 방법
+  codex-fast.md          Codex fast를 켤지 정하는 기준과 확인 방법
   fixes.md               수정 작업자와 재검토
   spec-check.md          맡기기 전 명세 새 눈 점검(맥락 없는 에이전트가 물을 것 받기)
   desktop.md             실창 검사 잠금
