@@ -24,19 +24,7 @@ SKILL.md의 동작([SKILL.md](../SKILL.md) "실행 환경")을 Orca에서 하는
 
 ### OpenCode 모델과 강도
 
-OpenCode는 worktree 루트의 `opencode.json`을 읽으므로, 거기에 기본 에이전트(`build`)의 모델과 강도(`variant`)를 적는다.
-
-1. worktree가 아직 없으면 먼저 만든다(위 "worktree 만들기"). 저장소에 이미 커밋된 `opencode.json`이 있으면 이 방법을 쓰지 않고 기본값으로 띄운 뒤 사용자에게 알린다.
-2. worktree 루트에 쓴다. `model`은 `opencode models`가 보여 주는 `provider/model` 이름이고, 모델을 정하지 않았으면 `~/.config/opencode/opencode.json`의 기본 모델을 적는다.
-
-   ```json
-   { "agent": { "build": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "high" } } }
-   ```
-3. 이 파일이 커밋되지 않게 메인 저장소의 `.git/info/exclude`에 `/opencode.json`을 더한다(worktree가 함께 쓰는 파일이라 한 번이면 된다).
-4. worktree에서 `opencode debug agents`를 돌려 `build`의 `model`에 정한 모델과 `variant`가 보이는지 확인한다.
-5. `worker-start --spec ... --worktree "id:<worktree id>" --agent opencode`로 띄운다.
-
-같은 worktree에서 다음 OpenCode 작업자의 강도가 다르면 파일을 고치고 4번을 다시 한다. 실제로 쓰인 값은 `~/.local/share/opencode/opencode.db`의 `session_v2.model`에서 확인할 수 있다.
+[opencode.md](../opencode.md)의 "모델과 강도"대로 worktree에 `opencode.json`을 쓴 뒤 `worker-start --spec ... --worktree "id:<worktree id>" --agent opencode`로 띄운다.
 
 ### Codex fast
 
