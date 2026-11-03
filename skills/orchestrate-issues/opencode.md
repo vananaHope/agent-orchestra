@@ -34,6 +34,11 @@ OpenCode 대화형 화면은 모델 옵션을 받지 않는다(Orca `worker-star
 
 `opencode run`(아래 빠른 답변)에서는 `-m provider/model#variant`로 준다.
 
+**`opencode run` 공통 주의**(OpenCode 2.2.5에서 확인)
+- 표준 입력을 `< /dev/null`로 닫는다. 표준 입력이 터미널이 아니고 열려 있으면(셸 도구가 그렇게 넘기는 경우가 있다) 입력이 끝나기를 기다리며 세션도 만들지 않고 멈춘다.
+- 시간 제한으로 끊어도 세션은 취소되지 않는다. 다음에 서비스(`opencode serve --service`)가 뜰 때 끊긴 세션을 이어서 끝까지 돌려 사용량을 쓴다. 그래서 시간 제한은 넉넉히(10분 이상) 둔다.
+- 전역 기본 강도는 `~/.config/opencode/opencode.json`에서 에이전트마다 `model`과 `variant`를 **함께** 적어 준다(`{"agent": {"plan": {"model": "opencode-go/deepseek-v4.1-flash", "variant": "high"}}}`). `model` 없이 `variant`만 적으면 "unsupported legacy model variant"로 버려지고, 최상위 `model`의 `#variant`나 객체의 `variant`는 실행에 적용되지 않았다. `plan`이 띄우는 `explore`·`general` 하위 에이전트도 각자 적는다. 적용 여부는 `opencode debug agents`의 `model.variant`와 `opencode.db` `session_message`의 `"variant"`로 확인한다.
+
 ## 검증
 
 - 검토자는 등급의 검토 목록에서 고른다([tiers.md](tiers.md) "검토자 고르기"). `관리자`를 고르면 [tiers.md](tiers.md)의 "관리자 확인"을 한다.
@@ -52,7 +57,7 @@ SKILL.md 6단계 2의 rebase는 `light`다.
 
 관리자가 결론을 내기 전에 넓게 훑어야 하는 짧은 질문이다. 예를 들어 어느 파일이 무엇을 맡는지, 이슈가 어느 영역을 건드리는지, 지적의 심각도 첫 의견 같은 것이다.
 
-- 메인 저장소에서 읽기 전용 `plan` 에이전트로 묻는다: `opencode run --agent plan "<질문>"`. 20초 안팎이 걸린다.
+- 메인 저장소에서 읽기 전용 `plan` 에이전트로 묻는다: `opencode run --agent plan "<질문>" < /dev/null`. 20초 안팎이 걸린다(위 "`opencode run` 공통 주의").
 - 답은 관리자가 근거(파일·줄)를 직접 확인한 뒤에만 쓴다. 사용자만 정할 결정은 사용자에게 묻는다.
 
 ## 2차 의견
