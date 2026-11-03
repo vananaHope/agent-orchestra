@@ -127,7 +127,8 @@ async function readFrontier($: EngineInterface, base: string): Promise<{ issues:
 async function codexLimit($: EngineInterface): Promise<Limit[] | undefined> {
   const path = `${$.plugin.root}/${CODEX_SCRIPT}`
   if (!await $.fs.exists(path)) return undefined
-  const result = await $.process.run(['python', '-I', path, '--json'], { timeoutMs: 30000 })
+  // 띠는 주기 조회라 사용량이 들면 안 된다. API가 실패해도 codex exec로 넘어가지 않는다.
+  const result = await $.process.run(['python', '-I', path, '--json', '--no-exec'], { timeoutMs: 30000 })
   return codexLimits(JSON.parse(result.stdout))
 }
 

@@ -2,8 +2,9 @@
 한 번 돌려 그 실행이 남긴 세션 기록의 rate_limits를 읽는다.
 로그인 정보와 세션 기록은 $CODEX_HOME(없으면 ~/.codex)에 있다. Orca는 계정마다 CODEX_HOME을 따로 둔다.
 
-사용: python -I <check-limits 스킬 폴더>/scripts/codex_limit.py [--json] [--exec]
-  --exec  사용량 API를 건너뛰고 codex exec로 잰다.
+사용: python -I <check-limits 스킬 폴더>/scripts/codex_limit.py [--json] [--exec | --no-exec]
+  --exec     사용량 API를 건너뛰고 codex exec로 잰다.
+  --no-exec  사용량 API만 쓴다. 실패해도 codex exec로 넘어가지 않는다(사용량이 들지 않아야 하는 주기 조회용).
 종료 코드: 0 = 새 작업 가능, 1 = 한도 경고(사용률 80% 이상), 2 = 소진(100%) 또는 확인 실패
 """
 import argparse
@@ -11,6 +12,8 @@ import datetime
 import json
 import os
 import pathlib
+import shutil
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -30,14 +33,21 @@ def usage_limits():
     토큰은 갱신하지 않는다. refresh token은 쓸 때마다 바뀌어서 여기서 갱신하면 Codex 로그인이 끊긴다."""
     try:
         tokens = json.loads((CODEX_HOME / 'auth.json').read_text(encoding='utf-8'))['tokens']
-        request = urllib.request.Request(USAGE_URL, headers={
+        headers = {
             'authorization': f"Bearer {tokens['access_token']}",
             'chatgpt-account-id': tokens['account_id'],
             'originator': 'codex_cli_rs',
             'accept': 'application/json',
-        })
-        with urllib.request.urlopen(request, timeout=10) as response:
-            body = json.loads(response.read())
+        }
+        try:
+            with urllib.request.urlopen(urllib.request.Request(USAGE_URL, headers=headers), timeout=10) as response:
+                body = json.loads(response.read())
+        except OSError as error:
+            if not certificate_error(error):
+                raise
+            # Python에 딸린 OpenSSL이 새 인증서 체인(예: Let's Encrypt Root YE)을 검증하지 못하는 환경이 있다.
+            # 운영체제 인증서 저장소를 쓰는 curl로 한 번 더 읽는다(Windows의 curl.exe는 schannel).
+            body = curl_json(USAGE_URL, headers, error)
     except (OSError, ValueError, KeyError, TypeError) as error:
         return None, f'사용량 API 실패: {error}'
     rate = body.get('rate_limit') if isinstance(body, dict) else None
@@ -57,6 +67,26 @@ def usage_limits():
         reached = 'limit_reached'
     return {'primary': convert(rate['primary_window']), 'secondary': convert(rate.get('secondary_window')),
             'rate_limit_reached_type': reached, 'plan_type': body.get('plan_type')}, None
+
+
+def certificate_error(error):
+    reason = getattr(error, 'reason', error)
+    return isinstance(reason, ssl.SSLCertVerificationError) or (
+        isinstance(reason, ssl.SSLError) and 'CERTIFICATE_VERIFY_FAILED' in str(reason))
+
+
+def curl_json(url, headers, first_error):
+    """curl로 JSON을 읽는다. 토큰이 프로세스 목록에 보이지 않게 설정은 표준 입력(-K -)으로 넘긴다."""
+    curl = shutil.which('curl')
+    if not curl:
+        raise OSError(f'{first_error} (curl 없음)')
+    config = ''.join(f'header = "{name}: {value}"\n' for name, value in headers.items())
+    config += f'url = "{url}"\nsilent\nshow-error\nfail\nmax-time = 10\n'
+    result = subprocess.run([curl, '-K', '-'], input=config, capture_output=True, text=True,
+                            encoding='utf-8', errors='replace', timeout=20)
+    if result.returncode != 0:
+        raise OSError(f'{first_error}; curl: {result.stderr.strip()[-300:]}')
+    return json.loads(result.stdout)
 
 
 def exec_limits():
@@ -118,12 +148,18 @@ def main():
         stream.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true')
-    parser.add_argument('--exec', action='store_true', help='사용량 API를 건너뛰고 codex exec로 잰다')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--exec', action='store_true', help='사용량 API를 건너뛰고 codex exec로 잰다')
+    group.add_argument('--no-exec', action='store_true', help='사용량 API만 쓰고 codex exec로 넘어가지 않는다')
     args = parser.parse_args()
     limits, api_error, source = None, None, 'exec'
     if not args.exec:
         limits, api_error = usage_limits()
         source = 'usage-api'
+    if limits is None and args.no_exec:
+        message = {'status': 'unknown', 'error': api_error, 'api_error': api_error}
+        print(json.dumps(message, ensure_ascii=False) if args.json else f"확인 실패: {api_error}")
+        return 2
     if limits is None:
         limits, error = exec_limits()
         source = 'exec'
