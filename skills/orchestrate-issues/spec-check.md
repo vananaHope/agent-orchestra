@@ -10,8 +10,9 @@
 
 ## 누구에게
 
-1. OpenCode `plan` 에이전트(읽기 전용)에게 메인 저장소에서 묻는다: `opencode run --agent plan "<질문>"`. 1분 안팎이 걸린다.
-   - 연결 오류(`ECONNRESET` 등)로 끊기면 한 번 다시 묻는다. 일시적인 경우가 많다.
+1. OpenCode `plan` 에이전트(읽기 전용)에게 메인 저장소에서 묻는다: `opencode run --agent plan "<질문>"`. 명세가 가리킨 문서와 코드를 훑느라 **5~7분**이 걸릴 수 있다.
+   - 셸 도구의 시간 제한이나 `timeout`은 10분 이상으로 둔다. 더 짧으면 도는 중에 끊긴다. 끊기면 `opencode run`이 띄운 서비스(`opencode serve --service`)도 함께 죽고, CLI는 `Error: Transport: ECONNRESET: The socket connection was closed unexpectedly`를 남긴다. 네트워크 오류처럼 보이지만 시간 제한 때문이다. 종료 코드(`timeout`이면 124)를 파이프(`| tail`)로 가리지 않는다.
+   - 시간 제한 없이 `ECONNRESET`이 나면 한 번 다시 묻는다.
 2. OpenCode의 한도가 `ok`가 아니거나 쓸 수 없으면(다시 물어도 끊기면 포함), Agent 도구로 새 서브에이전트를 띄워 같은 질문을 준다. 이 대화의 내용은 넣지 않는다.
 
 ## 질문
