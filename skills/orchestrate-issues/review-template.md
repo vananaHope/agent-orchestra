@@ -48,7 +48,7 @@
 
 지적 수정의 재검토는 남겨 둔 같은 검토자에게 짧은 명세로 맡긴다. 병합 직전 SHA 변경의 재검토는 SKILL.md 4단계와 같은 방법으로 같은 worktree에 검토자를 띄운다.
 - 대상: `git diff <이전 커밋>..HEAD`와 브랜치 전체
-- rebase 뒤 재검토면 위 diff 대신 `git range-diff <옛 base>..<검토 통과 SHA> origin/main..<PR head>`의 확인 대상 부분을 본다. `<옛 base>`는 `git merge-base <검토 통과 SHA> origin/main`이며, 확인 대상 판정은 SKILL.md 6단계를 따른다.
+- rebase 뒤 재검토면 위 diff 대신 `git range-diff <옛 base>..<검토 통과 SHA> origin/main..<PR head>`의 확인 대상 부분을 본다. `<옛 base>`는 `git merge-base <검토 통과 SHA> origin/main`이며, `git rev-list --merges <옛 base>..<PR head>`에 병합 커밋이 있으면 range-diff에 보이지 않는 충돌 해결·변경도 본다. 병합 뒤 사후 확인의 범위와 확인 대상 판정은 SKILL.md 6단계를 따른다.
 - 판정 대상: "지금 고침"으로 정한 지적 목록. 넘긴 지적은 판정하지 않는다.
 - 병합 직전 SHA 변경으로 맡긴 재검토면 6단계에서 확인 대상으로 정한 차이를 판정한다.
 - 앞선 재현 절차를 다시 돌려 확인하고, 새 결함이 있는지 본다.

@@ -77,7 +77,7 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca·herdr app 위에�
 - **작성 규칙**(메시지 언어, PR 서명 줄)은 프로젝트 설정의 "작성 규칙" 절, 없으면 `AGENTS.md`의 작성 규칙을 따른다. 둘 다 없으면 한국어이고 서명 줄을 넣는다. 작업 명세, 커밋, PR, 이슈 댓글 모두.
 - **작업 파일**(명세, 검토 보고서)은 메인 저장소의 `.local/orchestration/<작업 이름>/`에 둔다(작업 이름은 [trackers.md](trackers.md)). Git에서 제외되는 위치다.
 - **작업 상태**는 같은 폴더의 `state.md` 첫 줄에 적는다: `구현 중` → `검토 중` → `수정 중` → `지시 대기` → `PR 열림` → `끝`(자동 병합이면 `지시 대기`·`PR 열림`을 건너뛴다). 단계가 바뀔 때마다 고친다. 세션이 바뀌어도 이 파일로 진행 중인 작업을 안다.
-  - 둘째 줄 `등급: <등급> · 작업자: <표기>` 아래에 `검토 통과 SHA: <전체 해시>` 줄을 둔다. 첫 두 줄의 형식은 바꾸지 않는다. 관리자가 5단계에서 검토 결론이 "통과"임을 판정하거나 [fixes.md](fixes.md)의 완료 기준을 채운 뒤에만 적는다. 아직 통과한 커밋이 없으면 이 줄은 생략한다.
+  - 둘째 줄 `등급: <등급> · 작업자: <표기>` 아래에 `검토 통과 SHA: <전체 해시>` 줄을 둔다. 첫 두 줄의 형식은 바꾸지 않는다. 관리자가 5단계에서 검토 결론이 "통과"임을 판정하거나 [fixes.md](fixes.md)의 완료 기준을 채운 뒤, 또는 6단계 3의 차이 확인이 통과한 뒤에만 적는다. 아직 통과한 커밋이 없으면 이 줄은 생략한다.
   - **막힘**: 작업이 사용자의 결정이나 외부 조건(키 발급, 다른 팀의 일정 등)을 기다리느라 진행할 수 없으면, `state.md`에 `막힘: <풀릴 조건>` 줄을 더한다(둘째 줄 아래). 지휘 현황 패널과 띠가 `■ 막힘: <조건>`으로 보여 주고, 작업자가 쉬어도 `⏸ 멈춤`으로 보지 않는다. 풀리면 그 줄을 지운다.
 - **맡김 기록**: 작업자에게 맡긴 일(구현, 앞부분, 지적 수정, rebase, 재위임)은 맡길 때와 결과가 나올 때 [tiers.md](tiers.md)의 "맡김 기록"에 남긴다.
 - **확인 자료**: 사람이나 검토자가 실제 동작을 재현할 때 쓸 자료는 프로젝트 설정의 "확인 자료" 절에 있다.
@@ -181,9 +181,11 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca·herdr app 위에�
 | --- | --- |
 | "PR 올려" | 아래 1·2를 하고 `state.md`를 `PR 열림`으로 바꾼다. PR 링크를 보고한다. |
 | "병합해" | 아래 2·3을 한다. `자동`과 같은 병합 직전 SHA 확인을 거친다. |
-| "병합됐어"(사람이 병합) | `gh pr view <PR> --json state,headRefOid`로 `MERGED`인지 확인하고, 병합된 PR의 `headRefOid`를 `검토 통과 SHA`와 비교한다. 다르면 아래 3의 range-diff와 확인 기준으로 사후 확인해 결과를 보고한다. 사후 확인임을 명시하고, 미해결 차이가 있으면 사용자에게 알린 뒤 정리를 보류한다. 확인이 끝나면 아래 4부터 한다. |
+| "병합됐어"(사람이 병합) | `gh pr view <PR> --json state -q .state`로 `MERGED`인지 확인하고, `gh pr view <PR> --json mergeCommit,headRefOid -q '[.mergeCommit.oid, .headRefOid]'`로 병합 커밋과 PR head를 얻는다. PR head가 `검토 통과 SHA`와 같으면 range-diff 없이 확인을 끝낸다. 다르면 아래 사후 확인 방법으로 확인해 결과를 보고한다. 사후 확인임을 명시하고, 미해결 차이가 있으면 사용자에게 알린 뒤 정리를 보류한다. 확인이 끝나면 아래 4부터 한다. |
 | "리뷰 반영해" | `gh pr view <PR> --comments`와 리뷰를 교차 검토 지적처럼 5단계로 판정해 고친다. 고친 뒤 push하고 무엇을 고쳤는지 PR에 댓글로 남긴다. |
 | "그만둬" | PR을 닫을지 묻고, 이슈를 맡길 상태로 되돌린 뒤 4·5로 정리한다. |
+
+사후 확인에서는 `git -C <worktree> fetch origin`으로 원격 정보를 갱신한다. PR head가 로컬에 없으면 `git -C <worktree> fetch origin pull/<PR>/head`로 받는다. `merge` 방법으로 병합했으면 새 쪽 범위의 base를 병합 직전 `main`인 `<병합 커밋>^1`로 둔다. `<옛 base>`는 `git -C <worktree> merge-base <검토 통과 SHA> <병합 커밋>^1`로 구하고, `git -C <worktree> range-diff <옛 base>..<검토 통과 SHA> <병합 커밋>^1..<PR head>`로 비교한다. `squash`·`rebase` 방법이면 PR head가 `main`의 조상이 아니므로 아래 3의 `origin/main` 기준 공식이 그대로 동작한다. 어느 방법이든 아래 3의 병합 커밋 검사와 확인 대상 판정을 함께 적용한다.
 
 병합 방식이 `자동`이면 1부터 차례로 한다.
 
@@ -191,9 +193,9 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca·herdr app 위에�
 2. `main`이 그사이 앞으로 갔으면, 같은 worktree에 `light` 목록의 작업자(기본은 OpenCode)를 새로 **띄우기**해 `main` 위로 rebase하고 관련 테스트를 다시 돌리라고 맡긴다. 충돌 해결도 그 작업자가 한다. 같은 동작이 양쪽에서 바뀐 충돌이라 되돌리고 보고하면 원래 구현 작업자에게 맡긴다([opencode.md](opencode.md)의 "rebase"). "main 변경" 안내는 **진행 중인 작업이 구현일 때만** **보내기**한다. 검토 중인 이슈는 그 검토가 끝난 뒤 다음 구현 지시에 rebase를 넣는다(검토자에게 rebase 안내를 보내지 않는다).
    rebase와 관련 테스트가 끝나면 작업자가 `git push --force-with-lease`로 PR을 갱신한다.
 3. 병합 직전에 다음을 확인한 뒤 병합한다.
-   - `git -C <worktree> fetch origin`으로 원격 정보를 갱신하고, `git -C <worktree> rev-parse HEAD`로 로컬 head를, `gh pr view <PR> --json headRefOid`로 PR head를 확인한다. 비교 기준은 PR head다. 로컬과 PR head가 다르면 먼저 작업자에게 push 상태를 확인하게 하고, 일치한 뒤 다시 조회한다. `검토 통과 SHA`가 없으면 4·5단계의 검토와 판정을 먼저 마친다.
+   - `git -C <worktree> fetch origin`으로 원격 정보를 갱신하고, `git -C <worktree> rev-parse HEAD`로 로컬 head를, `gh pr view <PR> --json headRefOid -q .headRefOid`로 PR head를 확인한다. 비교 기준은 PR head다. 로컬과 PR head가 다르면 먼저 작업자에게 push 상태를 확인하게 하고, 일치한 뒤 다시 조회한다. `검토 통과 SHA`가 없으면 4·5단계의 검토와 판정을 먼저 마친다.
    - PR head가 `검토 통과 SHA`와 같으면 그 head로 병합한다.
-   - 다르면 이전 `검토 통과 SHA`와 PR head를 기록하고, `git -C <worktree> merge-base <검토 통과 SHA> origin/main`으로 `<옛 base>`를 구한 뒤 `git -C <worktree> range-diff <옛 base>..<검토 통과 SHA> origin/main..<PR head>`를 확인한다. 모든 커밋이 짝을 이루고 모두 `=`이면 rebase만 한 것으로 보고 병합한다. 이 경우 기존 `검토 통과 SHA`와 동등성 확인 근거를 남긴다. 출력이 비었거나 비교할 커밋을 찾을 수 없으면 동등하다고 간주하지 않고 원인을 확인한다.
+   - 다르면 이전 `검토 통과 SHA`와 PR head를 기록하고, `git -C <worktree> merge-base <검토 통과 SHA> origin/main`으로 `<옛 base>`를 구한 뒤 `git -C <worktree> range-diff <옛 base>..<검토 통과 SHA> origin/main..<PR head>`를 확인한다. 모든 커밋이 짝을 이루고 모두 `=`이며 `git -C <worktree> rev-list --merges <옛 base>..<PR head>`가 비어 있을 때만 rebase만 한 것으로 보고 병합한다. 이 경우 기존 `검토 통과 SHA`와 동등성 확인 근거를 남긴다. 병합 커밋이 있으면 `=`만 나와도 확인 대상으로 두고, 각 병합 커밋의 충돌 해결·변경을 `git -C <worktree> show --remerge-diff <병합 커밋>`이나 `git -C <worktree> diff <병합 커밋>^1 <병합 커밋>`으로 확인한다. 출력이 비었거나 비교할 커밋을 찾을 수 없으면 동등하다고 간주하지 않고 원인을 확인한다.
    - `!` 짝, 짝 없는 새 커밋(`>`), 빠진 커밋(`<`)은 확인 대상이다. 충돌 해결이나 추가·삭제된 커밋의 차이만 확인한다. [tiers.md](tiers.md)의 "관리자 확인" 기준대로 확인 대상 차이가 파일 3개 이상이거나 100줄을 넘으면, 또는 의심스러우면 4단계와 같은 방법으로 같은 worktree에 검토자를 띄워 [review-template.md](review-template.md)의 "재검토"를 맡긴다. 그 밖에는 관리자가 관련 테스트와 차이를 확인하고 `minor-check-<k>.md`에 결과와 "확인한 커밋"을 남긴다. Claude 절약 모드에서는 [limits.md](limits.md)대로 Codex 재검토에 맡긴다.
    - 차이의 재검토 또는 관리자 확인이 통과한 뒤 `검토 통과 SHA`를 그 보고서의 "검토한 커밋" 또는 "확인한 커밋"으로 갱신한다. 수정이 더 필요하면 [fixes.md](fixes.md)를 거치며, push 뒤 PR head를 다시 조회해 이 확인을 반복한다.
    - `gh pr merge <PR> --<병합 방법> --match-head-commit <확인한 head> --subject "<제목> (<이슈 표시>)"`로 병합하고 원격 브랜치를 지운다. `<확인한 head>`는 위에서 확인한 PR head의 전체 해시다. 확인 뒤 head가 바뀌어 병합이 거절되면 새 PR head로 이 확인을 다시 한다. 병합 방법은 프로젝트 설정 "병합" 절(`merge`/`squash`/`rebase`, 없으면 `merge`)이다.
