@@ -64,7 +64,7 @@
 
 검토 목록에서 `관리자`를 고른 일에 쓴다. 관리자 확인은 작은 diff에 맞춘 것이라 `light` 밖의 검토 목록에는 넣지 않기를 권한다. rebase는 [opencode.md](opencode.md)의 "rebase" 검증을 따른다.
 
-- 관리자가 diff를 읽고 관련 테스트만 돌린 뒤 `.local/orchestration/<작업 이름>/minor-check-<k>.md`에 결과를 남긴다.
+- 관리자가 diff를 읽고 관련 테스트만 돌린 뒤 `.local/orchestration/<작업 이름>/minor-check-<k>.md`에 결과(통과 / 수정 필요)와 **확인한 커밋**(`git -C <worktree> rev-parse HEAD`로 확인한 전체 해시)을 남긴다.
 - 실제 변경이 파일 3개 이상이거나 100줄을 넘으면, 또는 의심스러우면 검토 목록에서 `관리자` 다음 항목으로 검토자를 고른다([review-template.md](review-template.md)).
 
 ## 띄우기

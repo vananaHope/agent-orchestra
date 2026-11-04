@@ -51,7 +51,7 @@ SKILL.md 6단계 2의 rebase는 `light`다.
 - 명세에 rebase 전 `HEAD`를 적어 둔다.
 - import, 목록 순서, 붙어 있는 줄처럼 양쪽 의도를 모두 살리기 쉬운 충돌은 OpenCode가 해결한다.
 - 같은 함수의 동작이 양쪽에서 바뀐 충돌이면 `git rebase --abort`로 되돌리고 보고하게 한다. 관리자는 그 rebase를 원래 구현 작업자에게 맡긴다.
-- 검증: 관리자가 `git range-diff <rebase 전 HEAD>...HEAD`로 충돌 해결분 말고는 변경이 같은지 보고, 관련 테스트 통과를 확인한다.
+- 검증: 관리자가 `git -C <worktree> range-diff <옛 base>..<검토 통과 SHA> origin/main..<PR head>`로 확인하고, 관련 테스트 통과를 확인한다. `<옛 base>`는 `git -C <worktree> merge-base <검토 통과 SHA> origin/main`이다. rebase 뒤 작업자가 `git push --force-with-lease`로 PR을 갱신한 다음 PR head를 조회한다. 모든 짝이 `=`이면 rebase만 한 것이고, `!`나 짝 없는 새 커밋(`>`) 또는 빠진 커밋(`<`)이 있으면 그 부분을 SKILL.md 6단계대로 재검토하거나 관리자가 확인한다. rebase 전 HEAD도 기록하되, 최종 비교 기준은 마지막 `검토 통과 SHA`로 한다.
 
 ## 빠른 답변·빠른 판단
 
