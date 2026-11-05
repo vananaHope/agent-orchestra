@@ -1,6 +1,6 @@
 """Claude 실제 한도를 잰다. Claude Code 로그인 토큰으로 사용량 API(/api/oauth/usage)를 읽는다.
 로그인 정보는 $CLAUDE_CONFIG_DIR(없으면 ~/.claude)의 .credentials.json에 있다(Windows·Linux. macOS는 키체인이라 지원하지 않는다).
-상태 표시줄이나 다른 플러그인에 기대지 않으므로 Orca·herdr·T3 어디서나 같은 방법으로 잰다.
+상태 표시줄이나 다른 플러그인에 기대지 않으므로 Orca·herdr 어디서나 같은 방법으로 잰다.
 
 사용: python -I <check-limits 스킬 폴더>/scripts/claude_limit.py [--json]
 종료 코드: 0 = 새 작업 가능, 1 = 한도 경고(사용률 80% 이상), 2 = 소진(100%) 또는 확인 실패
