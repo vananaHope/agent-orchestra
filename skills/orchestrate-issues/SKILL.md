@@ -1,6 +1,6 @@
 ---
 name: orchestrate-issues
-description: 이슈(GitHub·로컬 md·아티팩트)를 Orca·herdr app·T3 Code 위에서 "등급별 작업자(OpenCode·Codex·Claude) 구현 → 다른 계열 교차 검토 → PR·병합" 흐름으로 지휘한다. 이슈 구현·다음 이슈 진행·다음 묶음(wave) 진행, 지시 대기 작업의 PR 올리기·병합·리뷰 반영을 요청받았을 때 사용.
+description: 이슈(GitHub·로컬 md·아티팩트)를 Orca·herdr app 위에서 "등급별 작업자(OpenCode·Codex·Claude) 구현 → 다른 계열 교차 검토 → PR·병합" 흐름으로 지휘한다. 이슈 구현·다음 이슈 진행·다음 묶음(wave) 진행, 지시 대기 작업의 PR 올리기·병합·리뷰 반영을 요청받았을 때 사용.
 ---
 
 # 이슈 지휘
@@ -26,7 +26,6 @@ description: 이슈(GitHub·로컬 md·아티팩트)를 Orca·herdr app·T3 Code
 - **실행 환경**: 작업자를 띄우고 기다리고 정리하는 명령은 이 문서에 없다. 아래 동작마다 실행 환경 문서의 같은 이름 절을 따른다. 이 문서에서 **굵게** 쓴 동작 이름(**띄우기**, **기다리기** 등)이 그 절이다. 실행 환경은 지휘를 시작할 때 한 번 정하고 사용자에게 한 줄로 알린다.
   - 사용자가 실행 환경을 말했으면 그것.
   - 셸에서 `$HC_TERMINAL_ID`가 있으면(herdr app의 터미널 안) herdr app: [backends/herdr.md](backends/herdr.md).
-  - T3 Code 도구(`delegate_task`, `t3_pending_request`)가 있으면 T3 Code: [backends/t3.md](backends/t3.md). 이 환경에서는 이슈마다 둔 **이슈 담당**이 2단계 3부터 5단계까지 하고, 관리자는 나머지를 한다(t3.md "다른 점: 이슈 담당").
   - 그 밖에는 Orca: [backends/orca.md](backends/orca.md).
 
 ## 실행 환경
