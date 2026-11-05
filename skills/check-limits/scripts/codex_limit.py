@@ -2,9 +2,8 @@
 한 번 돌려 그 실행이 남긴 세션 기록의 rate_limits를 읽는다.
 로그인 정보와 세션 기록은 $CODEX_HOME(없으면 ~/.codex)에 있다. Orca는 계정마다 CODEX_HOME을 따로 둔다.
 
-사용: python -I <check-limits 스킬 폴더>/scripts/codex_limit.py [--json] [--exec | --no-exec]
+사용: python -I <check-limits 스킬 폴더>/scripts/codex_limit.py [--json] [--exec]
   --exec     사용량 API를 건너뛰고 codex exec로 잰다.
-  --no-exec  사용량 API만 쓴다. 실패해도 codex exec로 넘어가지 않는다(사용량이 들지 않아야 하는 주기 조회용).
 종료 코드: 0 = 새 작업 가능, 1 = 한도 경고(사용률 80% 이상), 2 = 소진(100%) 또는 확인 실패
 """
 import argparse
@@ -148,18 +147,12 @@ def main():
         stream.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true')
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--exec', action='store_true', help='사용량 API를 건너뛰고 codex exec로 잰다')
-    group.add_argument('--no-exec', action='store_true', help='사용량 API만 쓰고 codex exec로 넘어가지 않는다')
+    parser.add_argument('--exec', action='store_true', help='사용량 API를 건너뛰고 codex exec로 잰다')
     args = parser.parse_args()
     limits, api_error, source = None, None, 'exec'
     if not args.exec:
         limits, api_error = usage_limits()
         source = 'usage-api'
-    if limits is None and args.no_exec:
-        message = {'status': 'unknown', 'error': api_error, 'api_error': api_error}
-        print(json.dumps(message, ensure_ascii=False) if args.json else f"확인 실패: {api_error}")
-        return 2
     if limits is None:
         limits, error = exec_limits()
         source = 'exec'
