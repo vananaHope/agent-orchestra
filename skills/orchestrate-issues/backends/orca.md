@@ -84,7 +84,3 @@ Codex는 작업 폴더의 `.codex/config.toml`을 전역 설정보다 우선해 
 - 완료 보고(구현자): "완료 보고는 `worker_done` 요약으로 한다."
 - 완료 보고(검토자): "보고서 파일 경로를 `--report-path`로 넘긴다. `worker_done` 요약은 3문장 이내로 결론만."
 - 질문: "질문은 orchestration `ask`로 한다."
-
-## 지휘 현황 패널
-
-패널과 띠는 Orca의 `orchestration worker-list`와 `terminal list`에서 작업자 활동을 읽는다(`hooks/register.tsx`). 작업자를 누르면 `orca terminal switch`로 그 터미널을 연다.
