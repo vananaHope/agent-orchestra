@@ -1,5 +1,7 @@
 # agent-orchestra
 
+> **이 저장소는 아카이브됐다(2026-11-14).** 지휘 기능은 [vstack](https://github.com/vananaHope/vstack) 플러그인으로 옮겼다. `/vstack:v-mode`, `/vstack:orchestrate-issues`, `/vstack:configure`를 쓴다. 이미 있는 프로젝트의 설정(`docs/agents/orchestration.md` 또는 `.local/orchestration/settings.md`)과 `~/.agent-orchestra/` 경로는 vstack이 그대로 읽는다. 이 저장소는 더 고치지 않는다.
+
 Claude Code 플러그인. Orca·herdr app 위에서 여러 코딩 에이전트를 지휘해 GitHub 이슈를 처리한다.
 
 - 실행 환경: Orca, herdr app 중 관리자 세션이 도는 곳을 알아서 골라 그 방법으로 작업자를 띄운다.
